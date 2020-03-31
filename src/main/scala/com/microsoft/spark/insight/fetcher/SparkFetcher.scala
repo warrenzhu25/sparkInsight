@@ -14,13 +14,13 @@ import scala.util.{Failure, Success, Try}
 /**
   * A fetcher that gets Spark-related data from a combination of the Spark monitoring REST API and Spark event logs.
   */
-class SparkFetcher extends Fetcher {
-
-  import SparkFetcher._
+object SparkFetcher extends Fetcher {
 
   import ExecutionContext.Implicits.global
 
-  private val logger: Logger = Logger.getLogger(classOf[SparkFetcher])
+  private val logger: Logger = Logger.getLogger(SparkFetcher.getClass)
+
+  private val DEFAULT_TIMEOUT = Duration(5, SECONDS)
 
   private[fetcher] lazy val hadoopConfiguration: Configuration = new Configuration()
 
@@ -55,9 +55,4 @@ class SparkFetcher extends Fetcher {
   private def doFetchDataUsingRestClients(trackingUrl: String): Future[SparkApplicationData] = Future {
     Await.result(sparkRestClient.fetchData(trackingUrl), DEFAULT_TIMEOUT)
   }
-}
-
-object SparkFetcher {
-  val DEFAULT_TIMEOUT = Duration(5, SECONDS)
-  val FETCH_FAILED_TASKS = "fetch_failed_tasks"
 }

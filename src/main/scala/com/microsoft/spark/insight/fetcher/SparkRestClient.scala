@@ -52,7 +52,7 @@ class SparkRestClient {
   def fetchData(trackingUrl: String, fetchFailedTasks: Boolean = true)(
     implicit ec: ExecutionContext
   ): Future[SparkApplicationData] = {
-    val (appId, historyServerUri) = spilt(trackingUrl)
+    val (historyServerUri, appId) = spilt(trackingUrl)
 
     val (applicationInfo, attemptTarget) = getApplicationMetaData(appId, historyServerUri)
 
@@ -89,7 +89,10 @@ class SparkRestClient {
   }
 
   private def spilt(trackingUrl: String): (String, String) = {
-    ("1", "2")
+    val uri = new URI(trackingUrl)
+    val host = s"${uri.getScheme}://${uri.getHost}:${uri.getPort}"
+    val appId = uri.getPath.split('/').find(_.startsWith("application_")).getOrElse("")
+    (host, appId)
   }
 
   private def getApiTarget(historyServerUri: String): WebTarget =
