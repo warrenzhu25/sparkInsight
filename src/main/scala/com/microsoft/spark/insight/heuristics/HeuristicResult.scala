@@ -7,19 +7,39 @@ trait AnalysisResult {
 }
 
 case class HeuristicResult(name: String,
-                           results: Seq[AnalysisResult])
+                           results: Seq[AnalysisResult]){
+  override def toString: String = {
+    s"""
+      |$name
+      |=============
+      |${results.mkString("\n")}
+      |""".stripMargin
+  }
+}
 
 case class SingleValueResult(name: String,
                              value: String,
                              description: String,
-                             suggestedValue: String = "") extends AnalysisResult
+                             suggestedValue: String = "") extends AnalysisResult{
+  override def toString: String = {
+    Seq(name, value, suggestedValue, description).mkString("\t")
+  }
+}
 
 case class MultipleValuesResult(name: String,
                                 values: Seq[String],
-                                description: String = "") extends AnalysisResult
+                                description: String = "") extends AnalysisResult{
+  override def toString: String = {
+    Seq(name, values.mkString(","), description).mkString("\t")
+  }
+}
 
 case class SimpleResult(name: String,
-                        description: String) extends AnalysisResult
+                        description: String) extends AnalysisResult{
+  override def toString: String = {
+    Seq(name, description).mkString("\t")
+  }
+}
 
 /** Stage analysis result. */
 private[heuristics] sealed trait StageAnalysisResult {
@@ -80,18 +100,21 @@ private[heuristics] case class ExecutionMemorySpillResult(
  * @param severity                task failure severity.
  * @param score                   heuristic score for task failures.
  * @param details                 information and recommendations from analysis for task failures.
- * @param oomSeverity             severity for task failures due to OutOfMemory errors.
- * @param containerKilledSeverity severity for task failures due to container killed by YARN.
- * @param numFailures             number of task failures for the stage.
- * @param numOOM                  number of tasks which failed to to OutOfMemory errors.
- * @param numContainerKilled      number of tasks which failed due to container killed by YARN.
  */
 private[heuristics] case class TaskFailureResult(
                                                   severity: Severity,
                                                   score: Int,
                                                   details: Seq[String],
-                                                  oomSeverity: Severity,
-                                                  containerKilledSeverity: Severity,
-                                                  numFailures: Int,
-                                                  numOOM: Int,
-                                                  numContainerKilled: Int) extends StageAnalysisResult
+                                                  groupByError: Map[String, Int]) extends StageAnalysisResult {
+  override def toString: String = {
+    s"""
+       |Task Failure Summary
+       |======================
+       |${details.mkString("\n")}
+       |
+       |Error Message group by
+       |======================
+       |${groupByError.mkString("\n")}
+       |""".stripMargin
+  }
+}

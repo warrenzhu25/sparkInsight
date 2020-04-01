@@ -171,7 +171,7 @@ trait StageData{
   def schedulingPool: String
 
   def accumulatorUpdates: Seq[AccumulableInfo]
-  def tasks: Option[Map[Long, TaskDataImpl]]
+  def tasks: Map[Long, TaskDataImpl]
   def executorSummary: Option[Map[String, ExecutorStageSummary]]
 
   def peakJvmUsedMemory: Option[Long]
@@ -188,10 +188,11 @@ trait TaskData{
   def launchTime: Date
   def executorId: String
   def host: String
+  def status: String
   def taskLocality: String
   def speculative: Boolean
   def accumulatorUpdates: Seq[AccumulableInfo]
-  def errorMessage: Option[String]
+  def errorMessage: String
   def taskMetrics: Option[TaskMetrics]}
 
 trait TaskMetrics{
@@ -421,7 +422,7 @@ class StageDataImpl(
   var schedulingPool: String,
 
   var accumulatorUpdates: Seq[AccumulableInfoImpl],
-  var tasks: Option[Map[Long, TaskDataImpl]],
+  var tasks: Map[Long, TaskDataImpl],
   var executorSummary: Option[Map[String, ExecutorStageSummaryImpl]],
   var peakJvmUsedMemory: Option[Long],
   var peakExecutionMemory: Option[Long],
@@ -437,10 +438,11 @@ class TaskDataImpl(
   var launchTime: Date,
   var executorId: String,
   var host: String,
+  var status: String,
   var taskLocality: String,
   var speculative: Boolean,
   var accumulatorUpdates: Seq[AccumulableInfoImpl],
-  var errorMessage: Option[String] = None,
+  var errorMessage: String = "",
   var taskMetrics: Option[TaskMetricsImpl] = None) extends TaskData
 
 class TaskMetricsImpl(

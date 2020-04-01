@@ -6,7 +6,7 @@ import java.util.concurrent.TimeoutException
 import org.apache.hadoop.conf.Configuration
 import org.apache.log4j.Logger
 
-import scala.concurrent.duration.{Duration, SECONDS}
+import scala.concurrent.duration.{Duration, SECONDS, HOURS}
 import scala.concurrent.{Await, ExecutionContext, Future}
 import scala.util.{Failure, Success, Try}
 
@@ -20,7 +20,7 @@ object SparkFetcher extends Fetcher {
 
   private val logger: Logger = Logger.getLogger(SparkFetcher.getClass)
 
-  private val DEFAULT_TIMEOUT = Duration(5, SECONDS)
+  private val DEFAULT_TIMEOUT = Duration(1, HOURS)
 
   private[fetcher] lazy val hadoopConfiguration: Configuration = new Configuration()
 

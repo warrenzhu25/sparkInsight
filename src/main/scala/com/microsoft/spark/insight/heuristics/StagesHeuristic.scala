@@ -115,7 +115,7 @@ object StagesHeuristic extends Heuristic {
           formatStagesWithLongAverageExecutorRuntimes(stagesWithLongAverageExecutorRuntimes)
         ),
         MultipleValuesResult(
-          "Spark task failure result", stageAnalysis.flatMap(_.taskFailureResult.details)
+          "Spark task failure result", stageAnalysis.map(_.taskFailureResult.toString)
         ),
         MultipleValuesResult(
           "Spark stage failure result", stageAnalysis.flatMap(_.stageFailureResult.details)

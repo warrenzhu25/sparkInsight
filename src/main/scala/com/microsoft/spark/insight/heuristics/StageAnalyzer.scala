@@ -1,3 +1,19 @@
+/*
+ * Licensed to the Apache Software Foundation (ASF) under one or more
+ * contributor license agreements.  See the NOTICE file distributed with
+ * this work for additional information regarding copyright ownership.
+ * The ASF licenses this file to You under the Apache License, Version 2.0
+ * (the "License"); you may not use this file except in compliance with
+ * the License.  You may obtain a copy of the License at
+ *
+ *    http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 package com.microsoft.spark.insight.heuristics
 
 import com.microsoft.spark.insight.fetcher.SparkApplicationData
@@ -129,13 +145,14 @@ private[heuristics] class StagesAnalyzer(private val data: SparkApplicationData)
         case _ => None
       }
       val stageId = stageData.stageId
+      val stageTasks = data.taskData.getOrElse(stageId, Seq.empty)
 
       val executionMemorySpillResult = checkForExecutionMemorySpill(stageId, stageData)
       val longTaskResult = checkForLongTasks(stageId, stageData, medianTime, curNumPartitions)
       val taskSkewResult = checkForTaskSkew(stageId, stageData, medianTime, maxTime, stageDuration,
         executionMemorySpillResult.severity)
       val stageFailureResult = checkForStageFailure(stageId, stageData)
-      val taskFailureResult = checkForTaskFailure(stageId, stageData)
+      val taskFailureResult = checkForTaskFailure(stageId, stageData, stageTasks)
       val gcResult = checkForGC(stageId, stageData)
 
       new StageAnalysis(stageData.stageId, executionMemorySpillResult, longTaskResult,
@@ -398,12 +415,10 @@ private[heuristics] class StagesAnalyzer(private val data: SparkApplicationData)
    */
   private def checkForTaskFailure(
                                    stageId: Int,
-                                   stageData: StageData): TaskFailureResult = {
-    val failedTasksStageMap = data.stagesWithFailedTasks.flatMap { stageData =>
-      stageData.tasks.map(tasks => (stageData.stageId, tasks.values))
-    }.toMap
-
-    val failedTasks = failedTasksStageMap.get(stageId)
+                                   stageData: StageData,
+                                   taskData: Seq[TaskData]
+                                 ): TaskFailureResult = {
+    val failedTasks = taskData.filter(_.status == "FAILED")
 
     val details = new ArrayBuffer[String]()
 
@@ -415,18 +430,11 @@ private[heuristics] class StagesAnalyzer(private val data: SparkApplicationData)
 
     val score = Utils.getHeuristicScore(taskFailureSeverity, stageData.numFailedTasks)
 
-    val (numTasksWithOOM, oomSeverity) =
-      checkForSpecificTaskError(stageId, stageData, failedTasks,
-        StagesWithFailedTasksHeuristic.OOM_ERROR, "of OutOfMemory exception.",
-        details)
+    TaskFailureResult(taskFailureSeverity, score, details, groupByError(failedTasks))
+  }
 
-    val (numTasksWithContainerKilled, containerKilledSeverity) =
-      checkForSpecificTaskError(stageId, stageData, failedTasks,
-        StagesWithFailedTasksHeuristic.OVERHEAD_MEMORY_ERROR,
-        "the container was killed by YARN for exceeding memory limits.", details)
-
-    TaskFailureResult(taskFailureSeverity, score, details, oomSeverity, containerKilledSeverity,
-      stageData.numFailedTasks, numTasksWithOOM, numTasksWithContainerKilled)
+  private def groupByError(failedTasks: Iterable[TaskData]): Map[String, Int] = {
+    failedTasks.groupBy(_.errorMessage).mapValues(_.size)
   }
 
   /**
@@ -444,7 +452,7 @@ private[heuristics] class StagesAnalyzer(private val data: SparkApplicationData)
   private def checkForSpecificTaskError(
                                          stageId: Int,
                                          stageData: StageData,
-                                         failedTasks: Option[Iterable[TaskData]],
+                                         failedTasks: Iterable[TaskData],
                                          taskError: String,
                                          errorMessage: String,
                                          details: ArrayBuffer[String]): (Int, Severity) = {
@@ -464,13 +472,8 @@ private[heuristics] class StagesAnalyzer(private val data: SparkApplicationData)
    * @param error error to look for.
    * @return number of failed tasks wit the specified error.
    */
-  private def getNumTasksWithError(tasks: Option[Iterable[TaskData]], error: String): Int = {
-    tasks.map { failedTasks =>
-      failedTasks.count { task =>
-        val hasError = task.errorMessage.exists(_.contains(error))
-        hasError
-      }
-    }.getOrElse(0)
+  private def getNumTasksWithError(tasks: Iterable[TaskData], error: String): Int = {
+    tasks.count(task => task.errorMessage.contains(error))
   }
 
   /**

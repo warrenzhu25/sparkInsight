@@ -30,9 +30,11 @@ import javax.ws.rs.client.{Client, ClientBuilder, WebTarget}
 import javax.ws.rs.core.MediaType
 import org.apache.log4j.Logger
 import org.glassfish.jersey.client.ClientProperties
+import org.json4s.jackson.Json
 
-import scala.concurrent.duration.{Duration, SECONDS}
+import scala.concurrent.duration.{Duration, HOURS, SECONDS}
 import scala.concurrent.{Await, ExecutionContext, Future}
+import scala.util.{Failure, Success}
 import scala.util.control.NonFatal
 
 /**
@@ -49,7 +51,7 @@ class SparkRestClient {
 
   private val client: Client = ClientBuilder.newClient()
 
-  def fetchData(trackingUrl: String, fetchFailedTasks: Boolean = true)(
+  def fetchData(trackingUrl: String, fetchFailedTasks: Boolean = false)(
     implicit ec: ExecutionContext
   ): Future[SparkApplicationData] = {
     val (historyServerUri, appId) = spilt(trackingUrl)
@@ -67,12 +69,10 @@ class SparkRestClient {
         getExecutorSummaries(attemptTarget)
       }
 
-      val futureFailedTasks = if (fetchFailedTasks) {
-        Future {
-          getStagesWithFailedTasks(attemptTarget)
-        }
-      } else {
-        Future.successful(Seq.empty)
+      val futureTasks = Future {
+        val stageDatas = Await.result(futureStageDatas, DEFAULT_TIMEOUT)
+
+        getTasksOfFailedStages(attemptTarget, stageDatas.filter(_.status == StageStatus.FAILED))
       }
 
       SparkApplicationData(
@@ -81,10 +81,9 @@ class SparkRestClient {
         applicationInfo,
         Await.result(futureJobDatas, DEFAULT_TIMEOUT),
         Await.result(futureStageDatas, DEFAULT_TIMEOUT),
-        Await.result(futureExecutorSummaries, Duration(5, SECONDS)),
-        Await.result(futureFailedTasks, DEFAULT_TIMEOUT)
+        Await.result(futureExecutorSummaries, DEFAULT_TIMEOUT),
+        Await.result(futureTasks, DEFAULT_TIMEOUT)
       )
-
     }
   }
 
@@ -156,7 +155,7 @@ class SparkRestClient {
   }
 
   private def getStageDatas(attemptTarget: WebTarget): Seq[StageDataImpl] = {
-    val target = attemptTarget.path("stages/withSummaries")
+    val target = attemptTarget.path("stages")
     try {
       get(target, SparkRestObjectMapper.readValue[Seq[StageDataImpl]])
     } catch {
@@ -181,13 +180,19 @@ class SparkRestClient {
     }
   }
 
-  private def getStagesWithFailedTasks(attemptTarget: WebTarget): Seq[StageDataImpl] = {
-    val target = attemptTarget.path("stages/failedTasks")
+  private def getTasksOfFailedStages(attemptTarget: WebTarget,
+                                     stageDatas: Seq[StageData]
+                                    ): Map[Int, Seq[TaskDataImpl]] = {
+    stageDatas.map(stageData => stageData.stageId -> getTasks(attemptTarget, stageData)).toMap
+  }
+
+  private def getTasks(attemptTarget: WebTarget, stageData: StageData): Seq[TaskDataImpl] = {
+    val target = attemptTarget.path(s"stages/${stageData.stageId}/${stageData.attemptId}/taskList")
     try {
-      get(target, SparkRestObjectMapper.readValue[Seq[StageDataImpl]])
+      get(target, SparkRestObjectMapper.readValue[Seq[TaskDataImpl]])
     } catch {
       case NonFatal(e) => {
-        logger.error(s"error reading failedTasks ${target.getUri}. Exception Message = " + e.getMessage)
+        logger.error(s"error reading tasks ${target.getUri}. Exception Message = " + e.getMessage)
         logger.debug(e)
         throw e
       }
@@ -196,12 +201,11 @@ class SparkRestClient {
 }
 
 object SparkRestClient {
-  val HISTORY_SERVER_ADDRESS_KEY = "spark.yarn.historyServer.address"
   val API_V1_MOUNT_PATH = "api/v1"
   val IN_PROGRESS = ".inprogress"
-  val DEFAULT_TIMEOUT = Duration(5, SECONDS);
-  val CONNECTION_TIMEOUT = 5000
-  val READ_TIMEOUT = 5000
+  val DEFAULT_TIMEOUT = Duration(1, HOURS);
+  val CONNECTION_TIMEOUT = 60000
+  val READ_TIMEOUT = 60000
 
   val SparkRestObjectMapper = {
     val dateFormat = {
@@ -214,10 +218,12 @@ object SparkRestClient {
     val objectMapper = new ObjectMapper() with ScalaObjectMapper
     objectMapper.setDateFormat(dateFormat)
     objectMapper.registerModule(DefaultScalaModule)
-    objectMapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
+    objectMapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false)
+    objectMapper.configure(DeserializationFeature.EAGER_DESERIALIZER_FETCH, false)
     objectMapper
   }
 
   def get[T](webTarget: WebTarget, converter: String => T): T =
     converter(webTarget.request(MediaType.APPLICATION_JSON).get(classOf[String]))
+
 }
