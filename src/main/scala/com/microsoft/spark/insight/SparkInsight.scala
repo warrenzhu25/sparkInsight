@@ -26,7 +26,7 @@ class SparkInsight extends Callable[Int] {
 
   def call(): Int = {
     val appData = SparkFetcher.fetchData(trackingUrl)
-    heuristic.map(_.apply(appData)).foreach(println)
+    heuristic.map(_.apply(appData)).foreach(print)
     0
   }
 }

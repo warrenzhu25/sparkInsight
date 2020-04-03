@@ -36,6 +36,8 @@ object ExecutorGcHeuristic extends Heuristic {
     SeverityThresholds(low = 0.05D, moderate = 0.04D, severe = 0.03D, critical = 0.01D, ascending = false)
 
   object ExecutorsGcEvaluator extends SparkEvaluator {
+    val headers = Seq("Key", "Value")
+
     override def evaluate(sparkAppData: SparkApplicationData): Seq[AnalysisResult] = {
       lazy val executorAndDriverSummaries: Seq[ExecutorSummary] = sparkAppData.executorSummaries
       lazy val executorSummaries: Seq[ExecutorSummary] = executorAndDriverSummaries.filterNot(_.id.equals("driver"))
@@ -43,11 +45,13 @@ object ExecutorGcHeuristic extends Heuristic {
 
       val ratio: Double = jvmTime.toDouble / executorRunTimeTotal.toDouble
 
-      Seq(
-        SimpleResult("GC time to Executor Run time ratio", ratio.toString),
-        SimpleResult("Total GC time", jvmTime.toString),
-        SimpleResult("Total Executor Runtime", executorRunTimeTotal.toString)
+      val rows = Seq(
+        SimpleRowResult("GC time to Executor Run time ratio", ratio.toString),
+        SimpleRowResult("Total GC time", jvmTime.toString),
+        SimpleRowResult("Total Executor Runtime", executorRunTimeTotal.toString)
       )
+
+      Seq(SimpleResult("GC Summary", rows))
     }
 
     /**

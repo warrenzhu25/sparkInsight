@@ -56,7 +56,7 @@ class SparkRestClient {
   ): Future[SparkApplicationData] = {
     val (historyServerUri, appId) = spilt(trackingUrl)
 
-    val (applicationInfo, attemptTarget) = getApplicationMetaData(appId, historyServerUri)
+    val (applicationInfo, env, attemptTarget) = getApplicationMetaData(appId, historyServerUri)
 
     Future {
       val futureJobDatas = Future {
@@ -68,16 +68,13 @@ class SparkRestClient {
       val futureExecutorSummaries = Future {
         getExecutorSummaries(attemptTarget)
       }
-
       val futureTasks = Future {
-        val stageDatas = Await.result(futureStageDatas, DEFAULT_TIMEOUT)
-
-        getTasksOfFailedStages(attemptTarget, stageDatas.filter(_.status == StageStatus.FAILED))
+        getTasksOfFailedStages(attemptTarget)
       }
 
       SparkApplicationData(
         appId,
-        Map.empty,
+        env.sparkProperties.map(p => p._1 -> p._2).toMap,
         applicationInfo,
         Await.result(futureJobDatas, DEFAULT_TIMEOUT),
         Await.result(futureStageDatas, DEFAULT_TIMEOUT),
@@ -101,7 +98,7 @@ class SparkRestClient {
       .target(historyServerUri)
       .path(API_V1_MOUNT_PATH)
 
-  private def getApplicationMetaData(appId: String, historyServerUri: String): (ApplicationInfo, WebTarget) = {
+  private def getApplicationMetaData(appId: String, historyServerUri: String): (ApplicationInfo, ApplicationEnvironmentInfo, WebTarget) = {
     val apiTarget = getApiTarget(historyServerUri)
     val appTarget = apiTarget.path(s"applications/${appId}")
     logger.info(s"calling REST API at ${appTarget.getUri}")
@@ -112,7 +109,8 @@ class SparkRestClient {
       _.startTime
     }.attemptId
     val attemptTarget = lastAttemptId.map(appTarget.path).getOrElse(appTarget)
-    (applicationInfo, attemptTarget)
+    val applicationEnvironmentInfo = getEnv(attemptTarget)
+    (applicationInfo, applicationEnvironmentInfo, attemptTarget)
   }
 
   private def getApplicationInfo(appTarget: WebTarget): ApplicationInfoImpl = {
@@ -180,19 +178,32 @@ class SparkRestClient {
     }
   }
 
-  private def getTasksOfFailedStages(attemptTarget: WebTarget,
-                                     stageDatas: Seq[StageData]
-                                    ): Map[Int, Seq[TaskDataImpl]] = {
-    stageDatas.map(stageData => stageData.stageId -> getTasks(attemptTarget, stageData)).toMap
+  private def getTasksOfFailedStages(attemptTarget: WebTarget): Map[String, Seq[TaskDataImpl]] = {
+    val stageDatas = getTasks(attemptTarget)
+    stageDatas.map(s => s"${s.stageId}-${s.attemptId}" -> s.tasks.values.toSeq).toMap
   }
 
-  private def getTasks(attemptTarget: WebTarget, stageData: StageData): Seq[TaskDataImpl] = {
-    val target = attemptTarget.path(s"stages/${stageData.stageId}/${stageData.attemptId}/taskList")
+  private def getTasks(attemptTarget: WebTarget): Seq[StageData] = {
+    val target = attemptTarget.path(s"allTasks")
+                              .queryParam("status", "failed")
     try {
-      get(target, SparkRestObjectMapper.readValue[Seq[TaskDataImpl]])
+      get(target, SparkRestObjectMapper.readValue[Seq[StageDataImpl]])
     } catch {
       case NonFatal(e) => {
         logger.error(s"error reading tasks ${target.getUri}. Exception Message = " + e.getMessage)
+        logger.debug(e)
+        throw e
+      }
+    }
+  }
+
+  private def getEnv(attemptTarget: WebTarget): ApplicationEnvironmentInfo = {
+    val target = attemptTarget.path("environment")
+    try {
+      get(target, SparkRestObjectMapper.readValue[ApplicationEnvironmentInfo])
+    } catch {
+      case NonFatal(e) => {
+        logger.error(s"error reading env ${target.getUri}. Exception Message = " + e.getMessage)
         logger.debug(e)
         throw e
       }

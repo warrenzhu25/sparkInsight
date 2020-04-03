@@ -76,9 +76,6 @@ object ExecutorsHeuristic extends Heuristic {
           _.memoryUsed
         })
 
-      lazy val storageMemoryUsedSeverity: Severity =
-        severityOfDistribution(storageMemoryUsedDistribution, ignoreMaxBytesLessThanThreshold)
-
       lazy val taskTimeDistribution: Distribution =
         Distribution(executorSummaries.map {
           _.totalDuration
@@ -86,79 +83,60 @@ object ExecutorsHeuristic extends Heuristic {
 
       lazy val totalTaskTime: Long = executorSummaries.map(_.totalDuration).sum
 
-      lazy val taskTimeSeverity: Severity =
-        severityOfDistribution(taskTimeDistribution, ignoreMaxMillisLessThanThreshold)
-
       lazy val inputBytesDistribution: Distribution =
         Distribution(executorSummaries.map {
           _.totalInputBytes
         })
-
-      lazy val inputBytesSeverity: Severity =
-        severityOfDistribution(inputBytesDistribution, ignoreMaxBytesLessThanThreshold)
 
       lazy val shuffleReadBytesDistribution: Distribution =
         Distribution(executorSummaries.map {
           _.totalShuffleRead
         })
 
-      lazy val shuffleReadBytesSeverity: Severity =
-        severityOfDistribution(shuffleReadBytesDistribution, ignoreMaxBytesLessThanThreshold)
-
       lazy val shuffleWriteBytesDistribution: Distribution =
         Distribution(executorSummaries.map {
           _.totalShuffleWrite
         })
 
-      lazy val shuffleWriteBytesSeverity: Severity =
-        severityOfDistribution(shuffleWriteBytesDistribution, ignoreMaxBytesLessThanThreshold)
-
-      lazy val severity: Severity = Severity.max(
-        storageMemoryUsedSeverity,
-        taskTimeSeverity,
-        inputBytesSeverity,
-        shuffleReadBytesSeverity,
-        shuffleWriteBytesSeverity
-      )
-
-      Seq(
-        SimpleResult(
+      val rows = Seq(
+        SimpleRowResult(
           "Total executor storage memory allocated",
           MemoryFormatUtils.bytesToString(totalStorageMemoryAllocated)
         ),
-        SimpleResult(
+        SimpleRowResult(
           "Total executor storage memory used",
           MemoryFormatUtils.bytesToString(totalStorageMemoryUsed)
         ),
-        SimpleResult(
+        SimpleRowResult(
           "Executor storage memory utilization rate",
           f"${storageMemoryUtilizationRate}%1.3f"
         ),
-        SimpleResult(
+        SimpleRowResult(
           "Executor storage memory used distribution",
           Distribution.formatDistributionBytes(storageMemoryUsedDistribution)
         ),
-        SimpleResult(
+        SimpleRowResult(
           "Executor task time distribution",
           Distribution.formatDistributionDuration(taskTimeDistribution)
         ),
-        SimpleResult(
+        SimpleRowResult(
           "Executor task time sum",
           (totalTaskTime / Statistics.SECOND_IN_MS).toString
         ),
-        SimpleResult(
+        SimpleRowResult(
           "Executor input bytes distribution",
           Distribution.formatDistributionBytes(inputBytesDistribution)
         ),
-        SimpleResult(
+        SimpleRowResult(
           "Executor shuffle read bytes distribution",
           Distribution.formatDistributionBytes(shuffleReadBytesDistribution)
         ),
-        SimpleResult(
+        SimpleRowResult(
           "Executor shuffle write bytes distribution",
           Distribution.formatDistributionBytes(shuffleWriteBytesDistribution)
         )
       )
+      Seq(SimpleResult("Executor Summary", rows))
     }
 
     private[heuristics] def severityOfDistribution(

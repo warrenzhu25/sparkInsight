@@ -104,15 +104,17 @@ object JobsHeuristic extends Heuristic {
         if (numTasks == 0) None else Some(numFailedTasks.toDouble / numTasks.toDouble)
       }
 
-      Seq(
-        SimpleResult("Spark completed jobs count", numCompletedJobs.toString),
-        SimpleResult("Spark failed jobs count", numFailedJobs.toString),
-        MultipleValuesResult("Spark failed jobs list", failedJobs.map(formatFailedJob)),
-        SimpleResult("Spark job failure rate", f"${jobFailureRate.getOrElse(0.0D)}%.3f"),
-        MultipleValuesResult(
+      val rows = Seq(
+        SimpleRowResult("Spark completed jobs count", numCompletedJobs.toString),
+        SimpleRowResult("Spark failed jobs count", numFailedJobs.toString),
+        SimpleRowResult("Spark failed jobs list", failedJobs.map(formatFailedJob).mkString(",")),
+        SimpleRowResult("Spark job failure rate", f"${jobFailureRate.getOrElse(0.0D)}%.3f"),
+        SimpleRowResult(
           "Spark jobs with high task failure rates",
-          formatJobsWithHighTaskFailureRates(jobsWithHighTaskFailureRates)
+          formatJobsWithHighTaskFailureRates(jobsWithHighTaskFailureRates).mkString(",")
         ))
+
+      Seq(SimpleResult("Job Summary", rows))
     }
   }
 

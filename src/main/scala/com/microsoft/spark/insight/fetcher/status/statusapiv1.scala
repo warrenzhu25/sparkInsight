@@ -41,13 +41,19 @@ import java.util.Date
 
 import scala.collection.Map
 import org.apache.spark.JobExecutionStatus
-import org.apache.spark.status.api.v1.MemoryMetrics
+import org.apache.spark.status.api.v1.{MemoryMetrics, RuntimeInfo}
 
 trait ApplicationInfo {
   def id: String
   def name: String
   def attempts: Seq[ApplicationAttemptInfo]
 }
+
+class ApplicationEnvironmentInfo (
+                                   val runtime: RuntimeInfo,
+                                   val sparkProperties: Seq[(String, String)],
+                                   val systemProperties: Seq[(String, String)],
+                                   val classpathEntries: Seq[(String, String)])
 
 trait ApplicationAttemptInfo{
   def attemptId: Option[String]
@@ -192,7 +198,7 @@ trait TaskData{
   def taskLocality: String
   def speculative: Boolean
   def accumulatorUpdates: Seq[AccumulableInfo]
-  def errorMessage: String
+  def errorMessage: Option[String]
   def taskMetrics: Option[TaskMetrics]}
 
 trait TaskMetrics{
@@ -442,7 +448,7 @@ class TaskDataImpl(
   var taskLocality: String,
   var speculative: Boolean,
   var accumulatorUpdates: Seq[AccumulableInfoImpl],
-  var errorMessage: String = "",
+  var errorMessage: Option[String] = None,
   var taskMetrics: Option[TaskMetricsImpl] = None) extends TaskData
 
 class TaskMetricsImpl(

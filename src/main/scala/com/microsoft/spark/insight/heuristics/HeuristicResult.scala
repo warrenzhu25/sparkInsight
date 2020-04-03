@@ -1,120 +1,72 @@
+/*
+ * Licensed under the Apache License, Version 2.0 (the "License"); you may not
+ * use this file except in compliance with the License. You may obtain a copy of
+ * the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
+ * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
+ * License for the specific language governing permissions and limitations under
+ * the License.
+ */
 package com.microsoft.spark.insight.heuristics
+
+import com.microsoft.spark.insight.util.Tabulator
 
 trait AnalysisResult {
   def name: String
+  def description: String = ""
+}
 
-  def description: String
+trait TableResult extends AnalysisResult {
+  def header: Seq[Any]
+  def rows: Seq[RowResult]
+
+  override def toString: String = {
+    s"""
+       |$name - $description
+       |${Tabulator.format(header +: rows.map(_.toRow))}
+       |""".stripMargin
+  }
+}
+
+trait RowResult {
+  def toRow: Seq[Any]
 }
 
 case class HeuristicResult(name: String,
-                           results: Seq[AnalysisResult]){
+                           results: Seq[AnalysisResult]) {
   override def toString: String = {
     s"""
       |$name
       |=============
-      |${results.mkString("\n")}
+      |${results.mkString("")}
       |""".stripMargin
   }
 }
 
-case class SingleValueResult(name: String,
-                             value: String,
-                             description: String,
-                             suggestedValue: String = "") extends AnalysisResult{
-  override def toString: String = {
-    Seq(name, value, suggestedValue, description).mkString("\t")
-  }
-}
+case class ConfigResult(rows: Seq[ConfigRowResult]) extends TableResult {
+  override def name: String = "Config Suggestions"
 
-case class MultipleValuesResult(name: String,
-                                values: Seq[String],
-                                description: String = "") extends AnalysisResult{
-  override def toString: String = {
-    Seq(name, values.mkString(","), description).mkString("\t")
-  }
+  override def header: Seq[Any] = Seq("Key", "Value", "Suggested", "Description")
 }
 
 case class SimpleResult(name: String,
-                        description: String) extends AnalysisResult{
-  override def toString: String = {
-    Seq(name, description).mkString("\t")
-  }
+                        rows: Seq[SimpleRowResult],
+                        header: Seq[Any] = Seq("Key", "Value")) extends TableResult {
 }
 
-/** Stage analysis result. */
-private[heuristics] sealed trait StageAnalysisResult {
-
-  // the severity for the stage and heuristic evaluated
-  val severity: Severity
-
-  // the heuristics score for the stage and heuristic evaluated
-  val score: Int
-
-  // information, details and advice from the analysis
-  val details: Seq[String]
+case class ConfigRowResult(name: String,
+                           value: String,
+                           description: String,
+                           suggestedValue: String = "") extends RowResult {
+  override def toRow: Seq[Any] = Seq(name, value, suggestedValue, description)
 }
 
-/** Simple stage analysis result, with the severity, score, and details. */
-private[heuristics] case class SimpleStageAnalysisResult(
-                                                          severity: Severity,
-                                                          score: Int,
-                                                          details: Seq[String]) extends StageAnalysisResult
-
-/**
- * Stage analysis result for examining the stage for task skew.
- *
- * @param severity    task skew severity.
- * @param score       heuristics score for task skew.
- * @param details     information and recommendations from analysis for task skew.
- * @param rawSeverity severity based only on task skew, and not considering other thresholds
- *                    (task duration or ratio of task duration to stage suration).
- */
-private[heuristics] case class TaskSkewResult(
-                                               severity: Severity,
-                                               score: Int,
-                                               details: Seq[String],
-                                               rawSeverity: Severity) extends StageAnalysisResult
-
-/**
- * Stage analysis result for examining the stage for execution memory spill.
- *
- * @param severity            execution memory spill severity.
- * @param score               heuristics score for execution memory spill.
- * @param details             information and recommendations from analysis for execution memory spill.
- * @param rawSeverity         severity based only on execution memory spill, and not considering other
- *                            thresholds (max amount of data processed for the stage).
- * @param memoryBytesSpilled  the total amount of execution memory bytes spilled for the stage.
- * @param maxTaskBytesSpilled the maximum number of bytes spilled by a task.
- */
-private[heuristics] case class ExecutionMemorySpillResult(
-                                                           severity: Severity,
-                                                           score: Int,
-                                                           details: Seq[String],
-                                                           rawSeverity: Severity,
-                                                           memoryBytesSpilled: Long,
-                                                           maxTaskBytesSpilled: Long) extends StageAnalysisResult
-
-/**
- * Stage analysis result for examining the stage for task failures.
- *
- * @param severity                task failure severity.
- * @param score                   heuristic score for task failures.
- * @param details                 information and recommendations from analysis for task failures.
- */
-private[heuristics] case class TaskFailureResult(
-                                                  severity: Severity,
-                                                  score: Int,
-                                                  details: Seq[String],
-                                                  groupByError: Map[String, Int]) extends StageAnalysisResult {
-  override def toString: String = {
-    s"""
-       |Task Failure Summary
-       |======================
-       |${details.mkString("\n")}
-       |
-       |Error Message group by
-       |======================
-       |${groupByError.mkString("\n")}
-       |""".stripMargin
-  }
+case class SimpleRowResult(name: String,
+                        description: String) extends RowResult {
+  override def toRow: Seq[Any] = Seq(name, description)
 }
+
