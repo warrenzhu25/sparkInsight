@@ -21,9 +21,9 @@ import com.microsoft.spark.insight.fetcher.status._
 case class SparkApplicationData(
                          appId: String,
                          appConf: Map[String, String],
-                         appInfo: ApplicationInfo,
-                         jobData: Seq[JobData],
-                         stageData: Seq[StageData],
-                         executorSummaries: Seq[ExecutorSummary],
-                         taskData: Map[String, Seq[TaskData]]
+                         appInfo: ApplicationInfoImpl,
+                         jobData: Seq[JobDataImpl],
+                         stageData: Seq[StageDataImpl],
+                         executorSummaries: Seq[ExecutorSummaryImpl],
+                         taskData: Map[String, Seq[TaskDataImpl]]
 )

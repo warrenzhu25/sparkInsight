@@ -6,8 +6,9 @@ import java.util.concurrent.TimeoutException
 import org.apache.hadoop.conf.Configuration
 import org.apache.log4j.Logger
 
-import scala.concurrent.duration.{Duration, SECONDS, HOURS}
+import scala.concurrent.duration.{Duration, HOURS, SECONDS}
 import scala.concurrent.{Await, ExecutionContext, Future}
+import scala.io.Source
 import scala.util.{Failure, Success, Try}
 
 
@@ -29,7 +30,10 @@ object SparkFetcher extends Fetcher {
   override def fetchData(trackingUrl: String): SparkApplicationData = {
     doFetchData(trackingUrl) match {
       case Success(data) => data
-      case Failure(e) => throw new TimeoutException()
+      case Failure(e) => {
+        logger.error(e)
+        throw e
+      }
     }
   }
 

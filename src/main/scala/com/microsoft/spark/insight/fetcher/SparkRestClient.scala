@@ -18,6 +18,7 @@ package com.microsoft.spark.insight.fetcher
 
 import java.io.BufferedInputStream
 import java.net.URI
+import java.nio.file.{Files, Paths}
 import java.text.SimpleDateFormat
 import java.util.zip.ZipInputStream
 import java.util.{Calendar, SimpleTimeZone}
@@ -33,6 +34,7 @@ import org.glassfish.jersey.client.ClientProperties
 
 import scala.concurrent.duration.{Duration, HOURS}
 import scala.concurrent.{Await, ExecutionContext, Future}
+import scala.io.Source
 import scala.util.control.NonFatal
 
 /**
@@ -56,31 +58,68 @@ class SparkRestClient {
   ): Future[SparkApplicationData] = {
     val (historyServerUri, appId) = spilt(trackingUrl)
 
-    val (applicationInfo, env, attemptTarget) = getApplicationMetaData(appId, historyServerUri)
-
     Future {
-      val futureJobDatas = Future {
-        getJobDatas(attemptTarget)
-      }
-      val futureStageDatas = Future {
-        getStageDatas(attemptTarget)
-      }
-      val futureExecutorSummaries = Future {
-        getExecutorSummaries(attemptTarget)
-      }
-      val futureTasks = Future {
-        getTasksOfFailedStages(attemptTarget)
-      }
+      val localData = readDataLocally(appId)
 
-      SparkApplicationData(
-        appId,
-        env.sparkProperties.map(p => p._1 -> p._2).toMap,
-        applicationInfo,
-        Await.result(futureJobDatas, DEFAULT_TIMEOUT),
-        Await.result(futureStageDatas, DEFAULT_TIMEOUT),
-        Await.result(futureExecutorSummaries, DEFAULT_TIMEOUT),
-        Await.result(futureTasks, DEFAULT_TIMEOUT)
-      )
+      if (localData.nonEmpty) {
+        localData.get
+      } else {
+        val (applicationInfo, env, attemptTarget) = getApplicationMetaData(appId, historyServerUri)
+
+        val futureJobDatas = Future {
+          getJobDatas(attemptTarget)
+        }
+        val futureStageDatas = Future {
+          getStageDatas(attemptTarget)
+        }
+        val futureExecutorSummaries = Future {
+          getExecutorSummaries(attemptTarget)
+        }
+        val futureTasks = Future {
+          getTasksOfFailedStages(attemptTarget)
+        }
+
+        val appData = SparkApplicationData(
+          appId,
+          env.sparkProperties.map(p => p._1 -> p._2).toMap,
+          applicationInfo,
+          Await.result(futureJobDatas, DEFAULT_TIMEOUT),
+          Await.result(futureStageDatas, DEFAULT_TIMEOUT),
+          Await.result(futureExecutorSummaries, DEFAULT_TIMEOUT),
+          Await.result(futureTasks, DEFAULT_TIMEOUT)
+        )
+
+        writeDataLocally(appData)
+        appData
+      }
+    }
+  }
+
+  private def readDataLocally(appId: String): Option[SparkApplicationData] = {
+    val path = s"""D:\\SparkInsight\\$appId.json"""
+
+    if (!Files.exists(Paths.get(path))) {
+      return None
+    }
+
+    val bufferedSource = Source.fromFile(path)
+
+    try {
+      logger.info(s"Reading data from $path")
+      Some(SparkRestObjectMapper.readValue(bufferedSource.mkString, classOf[SparkApplicationData]))
+    } finally {
+      bufferedSource.close()
+    }
+  }
+
+  private def writeDataLocally(sparkApplicationData: SparkApplicationData) = {
+    val file = s"""D:\\SparkInsight\\${sparkApplicationData.appId}.json"""
+    val path = Paths.get(file)
+    if (!Files.exists(path)) {
+      logger.info(s"Writing data from $file")
+      Files.createDirectories(path.getParent)
+      Files.createFile(path)
+      Files.write(path, SparkRestObjectMapper.writeValueAsBytes(sparkApplicationData))
     }
   }
 
@@ -99,7 +138,7 @@ class SparkRestClient {
       .path(API_V1_MOUNT_PATH)
 
   private def getApplicationMetaData(appId: String, historyServerUri: String):
-  (ApplicationInfo, ApplicationEnvironmentInfo, WebTarget) = {
+  (ApplicationInfoImpl, ApplicationEnvironmentInfo, WebTarget) = {
     val apiTarget = getApiTarget(historyServerUri)
     val appTarget = apiTarget.path(s"applications/${appId}")
     logger.info(s"calling REST API at ${appTarget.getUri}")
@@ -184,7 +223,6 @@ object SparkRestClient {
     objectMapper.setDateFormat(dateFormat)
     objectMapper.registerModule(DefaultScalaModule)
     objectMapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false)
-    objectMapper.configure(DeserializationFeature.EAGER_DESERIALIZER_FETCH, false)
     objectMapper
   }
 
