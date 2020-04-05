@@ -30,19 +30,19 @@ import javax.ws.rs.client.{Client, ClientBuilder, WebTarget}
 import javax.ws.rs.core.MediaType
 import org.apache.log4j.Logger
 import org.glassfish.jersey.client.ClientProperties
-import org.json4s.jackson.Json
 
-import scala.concurrent.duration.{Duration, HOURS, SECONDS}
+import scala.concurrent.duration.{Duration, HOURS}
 import scala.concurrent.{Await, ExecutionContext, Future}
-import scala.util.{Failure, Success}
 import scala.util.control.NonFatal
 
 /**
-  * A client for getting data from the Spark monitoring REST API, e.g. <https://spark.apache.org/docs/1.4.1/monitoring.html#rest-api>.
-  *
-  * Jersey classloading seems to be brittle (at least when testing in the console), so some of the implementation is non-lazy
-  * or synchronous when needed.
-  */
+ * A client for getting data from the Spark monitoring REST API,
+ * e.g. <https://spark.apache.org/docs/1.4.1/monitoring.html#rest-api>.
+ *
+ * Jersey classloading seems to be brittle (at least when testing in the console),
+ * so some of the implementation is non-lazy
+ * or synchronous when needed.
+ */
 class SparkRestClient {
 
   import SparkRestClient._
@@ -51,7 +51,7 @@ class SparkRestClient {
 
   private val client: Client = ClientBuilder.newClient()
 
-  def fetchData(trackingUrl: String, fetchFailedTasks: Boolean = false)(
+  def fetchData(trackingUrl: String)(
     implicit ec: ExecutionContext
   ): Future[SparkApplicationData] = {
     val (historyServerUri, appId) = spilt(trackingUrl)
@@ -98,7 +98,8 @@ class SparkRestClient {
       .target(historyServerUri)
       .path(API_V1_MOUNT_PATH)
 
-  private def getApplicationMetaData(appId: String, historyServerUri: String): (ApplicationInfo, ApplicationEnvironmentInfo, WebTarget) = {
+  private def getApplicationMetaData(appId: String, historyServerUri: String):
+  (ApplicationInfo, ApplicationEnvironmentInfo, WebTarget) = {
     val apiTarget = getApiTarget(historyServerUri)
     val appTarget = apiTarget.path(s"applications/${appId}")
     logger.info(s"calling REST API at ${appTarget.getUri}")
@@ -114,15 +115,7 @@ class SparkRestClient {
   }
 
   private def getApplicationInfo(appTarget: WebTarget): ApplicationInfoImpl = {
-    try {
-      get(appTarget, SparkRestObjectMapper.readValue[ApplicationInfoImpl])
-    } catch {
-      case NonFatal(e) => {
-        logger.error(s"error reading applicationInfo ${appTarget.getUri}. Exception Message = " + e.getMessage)
-        logger.debug(e)
-        throw e
-      }
-    }
+    get(appTarget, SparkRestObjectMapper.readValue[ApplicationInfoImpl])
   }
 
   private[fetcher] def getApplicationLogs(logTarget: WebTarget): ZipInputStream = {
@@ -141,41 +134,17 @@ class SparkRestClient {
 
   private def getJobDatas(attemptTarget: WebTarget): Seq[JobDataImpl] = {
     val target = attemptTarget.path("jobs")
-    try {
-      get(target, SparkRestObjectMapper.readValue[Seq[JobDataImpl]])
-    } catch {
-      case NonFatal(e) => {
-        logger.error(s"error reading jobData ${target.getUri}. Exception Message = " + e.getMessage)
-        logger.debug(e)
-        throw e
-      }
-    }
+    get(target, SparkRestObjectMapper.readValue[Seq[JobDataImpl]])
   }
 
   private def getStageDatas(attemptTarget: WebTarget): Seq[StageDataImpl] = {
     val target = attemptTarget.path("stages")
-    try {
-      get(target, SparkRestObjectMapper.readValue[Seq[StageDataImpl]])
-    } catch {
-      case NonFatal(e) => {
-        logger.warn(s"error reading stageData ${target.getUri}. Exception Message = " + e.getMessage)
-        logger.debug(e)
-        throw e
-      }
-    }
+    get(target, SparkRestObjectMapper.readValue[Seq[StageDataImpl]])
   }
 
   private def getExecutorSummaries(attemptTarget: WebTarget): Seq[ExecutorSummaryImpl] = {
     val target = attemptTarget.path("allexecutors")
-    try {
-      get(target, SparkRestObjectMapper.readValue[Seq[ExecutorSummaryImpl]])
-    } catch {
-      case NonFatal(e) => {
-        logger.error(s"error reading executorSummary ${target.getUri}. Exception Message = " + e.getMessage)
-        logger.debug(e)
-        throw e
-      }
-    }
+    get(target, SparkRestObjectMapper.readValue[Seq[ExecutorSummaryImpl]])
   }
 
   private def getTasksOfFailedStages(attemptTarget: WebTarget): Map[String, Seq[TaskDataImpl]] = {
@@ -186,28 +155,12 @@ class SparkRestClient {
   private def getTasks(attemptTarget: WebTarget): Seq[StageData] = {
     val target = attemptTarget.path(s"allTasks")
                               .queryParam("status", "failed")
-    try {
-      get(target, SparkRestObjectMapper.readValue[Seq[StageDataImpl]])
-    } catch {
-      case NonFatal(e) => {
-        logger.error(s"error reading tasks ${target.getUri}. Exception Message = " + e.getMessage)
-        logger.debug(e)
-        throw e
-      }
-    }
+    get(target, SparkRestObjectMapper.readValue[Seq[StageDataImpl]])
   }
 
   private def getEnv(attemptTarget: WebTarget): ApplicationEnvironmentInfo = {
     val target = attemptTarget.path("environment")
-    try {
-      get(target, SparkRestObjectMapper.readValue[ApplicationEnvironmentInfo])
-    } catch {
-      case NonFatal(e) => {
-        logger.error(s"error reading env ${target.getUri}. Exception Message = " + e.getMessage)
-        logger.debug(e)
-        throw e
-      }
-    }
+    get(target, SparkRestObjectMapper.readValue[ApplicationEnvironmentInfo])
   }
 }
 
@@ -217,6 +170,7 @@ object SparkRestClient {
   val DEFAULT_TIMEOUT = Duration(1, HOURS);
   val CONNECTION_TIMEOUT = 60000
   val READ_TIMEOUT = 60000
+  val logger: Logger = Logger.getLogger(SparkRestClient.getClass)
 
   val SparkRestObjectMapper = {
     val dateFormat = {
@@ -235,6 +189,13 @@ object SparkRestClient {
   }
 
   def get[T](webTarget: WebTarget, converter: String => T): T =
-    converter(webTarget.request(MediaType.APPLICATION_JSON).get(classOf[String]))
-
+    try {
+      converter(webTarget.request(MediaType.APPLICATION_JSON).get(classOf[String]))
+    } catch {
+      case NonFatal(e) => {
+        logger.error(s"error fetching ${webTarget.getUri}. Exception Message = " + e.getMessage)
+        logger.debug(e)
+        throw e
+      }
+    }
 }
