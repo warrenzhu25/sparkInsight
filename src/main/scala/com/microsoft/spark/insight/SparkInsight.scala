@@ -9,7 +9,7 @@ import picocli.CommandLine.{Command, Option}
 
 @Command(name = "SparkInisght", version = Array("v0.1"),
   mixinStandardHelpOptions = true, // add --help and --version options
-  description = Array("SparkInsight - Auto tuning and failure analysic"))
+  description = Array("SparkInsight - Auto tuning and failure analysis"))
 class SparkInsight extends Callable[Int] {
 
   private val heuristic = Seq(
