@@ -2,10 +2,9 @@ package org.apache.spark.insight.analyzer
 
 import org.apache.spark.insight.fetcher.SparkApplicationData
 import org.apache.spark.status.api.v1.StageData
-import org.apache.spark.util.Utils._
 
 object AppSummaryAnalyzer extends Analyzer {
-  val headers = Seq("Metric", "Value")
+  private val headers = Seq("Metric", "Value")
 
   override def analysis(sparkAppData: SparkApplicationData): AnalysisResult = {
     val stageData = sparkAppData.stageData
@@ -13,7 +12,7 @@ object AppSummaryAnalyzer extends Analyzer {
     val rows = stageData
       .map(s => getMetrics(s))
       .reduce(combineSum)
-      .map { case (k, v) => Seq(k, v.toString) }
+      .map { case (k, v) => Metric(k, v).toRow() }
       .toSeq
 
     AnalysisResult("App Summary", headers, rows)
@@ -24,7 +23,6 @@ object AppSummaryAnalyzer extends Analyzer {
   }
 
   private def getMetrics(stageData: StageData) = {
-    val metrics =
       stageData.getClass.getDeclaredFields
         .filter(f => f.getType.toString.equals("long"))
         .map(f => {
@@ -32,7 +30,5 @@ object AppSummaryAnalyzer extends Analyzer {
           f.getName -> f.get(stageData).asInstanceOf[Long]
         })
         .toMap
-
-    metrics
   }
 }
