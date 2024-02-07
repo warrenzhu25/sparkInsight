@@ -1,6 +1,6 @@
 package org.apache.spark.insight
 
-import org.apache.spark.insight.analyzer.AppSummaryAnalyzer
+import org.apache.spark.insight.analyzer.{AppSummaryAnalyzer, InitialExecutorAnalyzer}
 import org.apache.spark.insight.fetcher.SparkFetcher
 import picocli.CommandLine
 import picocli.CommandLine.{Command, Option}
@@ -13,12 +13,13 @@ import java.util.concurrent.Callable
 class SparkInsight extends Callable[Int] {
 
   private val analyzers = Seq(
+    InitialExecutorAnalyzer,
     AppSummaryAnalyzer,
   )
 
   @Option(names = Array("-u", "--url"), paramLabel = "URL",
     description = Array("Spark app tracking url"))
-  private var trackingUrl: String = "http://localhost:18080/history/app-20230709002102-0000"
+  private var trackingUrl: String = "http://localhost:18080/history/app-20231129012909-0000"
 
   def call(): Int = {
     val appData = SparkFetcher.fetchData(trackingUrl)
