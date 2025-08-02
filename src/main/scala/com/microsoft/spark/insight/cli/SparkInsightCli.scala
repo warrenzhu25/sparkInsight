@@ -12,8 +12,12 @@ import java.util.concurrent.Callable
  */
 @Command(name = "spark-insight-cli", version = Array("v0.1"),
   mixinStandardHelpOptions = true, // add --help and --version options
-  description = Array("SparkInsight - Auto tuning and failure analysis"))
-class SparkInsightCli extends Callable[Int] {
+  description = Array("SparkInsight - Auto tuning and failure analysis"),
+  subcommands = Array(classOf[RunCommand], classOf[ServerCommand]))
+class SparkInsightCli {}
+
+@Command(name = "run", description = Array("Run analysis on Spark applications"))
+class RunCommand extends Callable[Int] {
 
   private val analyzers = Seq(
     AutoScalingAnalyzer,
@@ -49,6 +53,14 @@ class SparkInsightCli extends Callable[Int] {
       AppDiffAnalyzer.analysis(appData1, appData2).toCliOutput
       StageLevelDiffAnalyzer.analysis(appData1, appData2).toCliOutput
     }
+    0
+  }
+}
+
+@Command(name = "server", description = Array("Start the web server"))
+class ServerCommand extends Callable[Int] {
+  def call(): Int = {
+    com.microsoft.spark.insight.server.WebServer.main(Array())
     0
   }
 }
