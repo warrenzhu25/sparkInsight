@@ -34,13 +34,21 @@ class RunCommand extends Callable[Int] {
     description = Array("Spark app tracking url 2"))
   private var trackingUrl2: String = _
 
+  private def getFullUrl(urlOrAppId: String): String = {
+    if (urlOrAppId.startsWith("http")) {
+      urlOrAppId
+    } else {
+      s"http://localhost:18080/history/$urlOrAppId"
+    }
+  }
+
   def call(): Int = {
     if (trackingUrl2 == null) {
-      val appData = SparkFetcher.fetchData(trackingUrl1)
+      val appData = SparkFetcher.fetchData(getFullUrl(trackingUrl1))
       analyzers.map(_.analysis(appData)).foreach(_.toCliOutput)
     } else {
-      val appData1 = SparkFetcher.fetchData(trackingUrl1)
-      val appData2 = SparkFetcher.fetchData(trackingUrl2)
+      val appData1 = SparkFetcher.fetchData(getFullUrl(trackingUrl1))
+      val appData2 = SparkFetcher.fetchData(getFullUrl(trackingUrl2))
       AppDiffAnalyzer.analysis(appData1, appData2).toCliOutput
       StageLevelDiffAnalyzer.analysis(appData1, appData2).toCliOutput
     }

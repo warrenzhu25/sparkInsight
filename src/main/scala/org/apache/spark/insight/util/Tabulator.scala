@@ -23,13 +23,13 @@ object Tabulator {
   private def formatRow(row: Seq[Any], colSizes: Seq[Int]): String = {
     val cells =
       for ((item, size) <- row.zip(colSizes))
-        yield if (size == 0) "" else (" %1$- " + size + "s").format(item)
-    cells.mkString("||", "|", "|")
+        yield if (size == 0) "" else (" %-" + size + "s").format(item)
+    cells.mkString("| ", " | ", " |")
   }
 
   private def rowSeparator(colSizes: Seq[Int]): String =
-    colSizes map {
+    colSizes.map {
       col =>
         "-" * (col + 2)
-    } mkString ("+", "+", "+")
+    }.mkString("+", "+", "+")
 }
