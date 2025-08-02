@@ -17,4 +17,18 @@ object AppSummaryAnalyzer extends Analyzer {
 
     AnalysisResult("App Summary", headers, rows)
   }
+
+  private def combineSum(left: Map[String, Long], right: Map[String, Long]) = {
+    left.keySet.union(right.keySet).map(k => k -> (left.getOrElse(k, 0L) + right.getOrElse(k, 0L))).toMap
+  }
+
+  private def getMetrics(stageData: StageData) = {
+    stageData.getClass.getDeclaredFields
+      .filter(f => f.getType == java.lang.Long.TYPE)
+      .map(f => {
+        f.setAccessible(true)
+        f.getName -> f.get(stageData).asInstanceOf[Long]
+      })
+      .toMap
+  }
 }
