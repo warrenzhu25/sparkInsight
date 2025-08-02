@@ -138,11 +138,10 @@
       <groupId>org.rogach</groupId>
       <version>3.5.1</version>
     </dependency>
-    <!-- https://mvnrepository.com/artifact/com.typesafe.play/twirl-api -->
     <dependency>
-      <artifactId>twirl-api_${scala.binary.version}</artifactId>
-      <groupId>com.typesafe.play</groupId>
-      <version>1.4.2</version>
+      <groupId>com.lihaoyi</groupId>
+      <artifactId>scalatags_${scala.binary.version}</artifactId>
+      <version>0.12.0</version>
     </dependency>
     <dependency>
       <artifactId>scala-library</artifactId>
@@ -215,6 +214,5 @@
     <spark.version>3.5.0</spark.version>
   </properties>
 
-  <version>1.0-SNAPSHOT</version>
-
-</project>
+    <version>1.0-SNAPSHOT</version>
+  </project>

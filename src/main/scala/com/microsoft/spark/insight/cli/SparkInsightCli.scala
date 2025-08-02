@@ -1,6 +1,6 @@
 package com.microsoft.spark.insight.cli
 
-import org.apache.spark.insight.analyzer.{AppDiffAnalyzer, AppSummaryAnalyzer, AutoScalingAnalyzer, StageLevelDiffAnalyzer}
+import org.apache.spark.insight.analyzer.{AppDiffAnalyzer, AppSummaryAnalyzer, AutoScalingAnalyzer, HtmlReportAnalyzer, StageLevelDiffAnalyzer}
 import org.apache.spark.insight.fetcher.SparkFetcher
 import picocli.CommandLine
 import picocli.CommandLine.{Command, Option}
@@ -29,8 +29,18 @@ class SparkInsightCli extends Callable[Int] {
     description = Array("Spark app tracking url 2"))
   private var trackingUrl2: String = _
 
+  @Option(names = Array("--html"), paramLabel = "HTML",
+    description = Array("Generate HTML report"))
+  private var html: Boolean = false
+
   def call(): Int = {
-    if (trackingUrl2 == null) {
+    if (html) {
+      val appData = SparkFetcher.fetchData(trackingUrl1)
+      val htmlReport = HtmlReportAnalyzer.analysis(appData)
+      val path = java.nio.file.Paths.get(s"${appData.appId}.html")
+      java.nio.file.Files.write(path, htmlReport.rows.head.head.getBytes)
+      java.awt.Desktop.getDesktop.browse(path.toUri)
+    } else if (trackingUrl2 == null) {
       val appData = SparkFetcher.fetchData(trackingUrl1)
       analyzers.map(_.analysis(appData)).foreach(_.toCliOutput)
     } else {
