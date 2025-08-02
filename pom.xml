@@ -8,36 +8,20 @@
     <plugins>
       <plugin>
         <artifactId>maven-compiler-plugin</artifactId>
-        <configuration>
-          <annotationProcessorPaths>
-            <path>
-              <artifactId>picocli-codegen</artifactId>
-              <groupId>info.picocli</groupId>
-              <version>4.2.0</version>
-            </path>
-          </annotationProcessorPaths>
-          <compilerArgs>
-            <arg>-Aproject=${project.groupId}/${project.artifactId}</arg>
-          </compilerArgs>
-          <source>${java.version}</source>
-          <target>${java.version}</target>
-        </configuration>
-        <groupId>org.apache.maven.plugins</groupId>
-        <version>3.8.0</version>
+        <version>3.11.0</version>
       </plugin>
       <plugin>
         <artifactId>scala-maven-plugin</artifactId>
+        <groupId>net.alchim31.maven</groupId>
+        <version>4.8.1</version>
         <executions>
           <execution>
             <goals>
-              <!-- Need to specify this explicitly, otherwise plugin won't be called when doing e.g. mvn compile -->
               <goal>compile</goal>
               <goal>testCompile</goal>
             </goals>
           </execution>
         </executions>
-        <groupId>net.alchim31.maven</groupId>
-        <version>3.2.2</version>
       </plugin>
       <plugin>
         <artifactId>maven-assembly-plugin</artifactId>
@@ -87,6 +71,24 @@
         </executions>
         <groupId>org.scalastyle</groupId>
         <version>1.0.0</version>
+      </plugin>
+      <plugin>
+        <groupId>org.scalatest</groupId>
+        <artifactId>scalatest-maven-plugin</artifactId>
+        <version>2.0.0</version>
+        <configuration>
+          <reportsDirectory>${project.build.directory}/surefire-reports</reportsDirectory>
+          <junitxml>.</junitxml>
+          <filereports>WDF TestSuite.txt</filereports>
+        </configuration>
+        <executions>
+          <execution>
+            <id>test</id>
+            <goals>
+              <goal>test</goal>
+            </goals>
+          </execution>
+        </executions>
       </plugin>
       <plugin>
         <artifactId>maven-checkstyle-plugin</artifactId>
@@ -158,9 +160,20 @@
       <groupId>com.fasterxml.jackson.module</groupId>
       <version>${fasterxml.jackson.version}</version>
     </dependency>
+    <dependency>
+      <groupId>org.scalatest</groupId>
+      <artifactId>scalatest_${scala.binary.version}</artifactId>
+      <version>3.2.15</version>
+      <scope>test</scope>
+    </dependency>
   </dependencies>
   <dependencyManagement>
     <dependencies>
+      <dependency>
+        <groupId>org.scala-lang</groupId>
+        <artifactId>scala-library</artifactId>
+        <version>${scala.version}</version>
+      </dependency>
       <dependency>
         <artifactId>jackson-core</artifactId>
         <groupId>com.fasterxml.jackson.core</groupId>
@@ -186,8 +199,8 @@
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
     <scala.binary.version>2.12</scala.binary.version>
-    <scala.version>2.12.8</scala.version>
-    <spark.version>3.3.1</spark.version>
+    <scala.version>2.12.18</scala.version>
+    <spark.version>3.5.0</spark.version>
   </properties>
 
   <version>1.0-SNAPSHOT</version>
