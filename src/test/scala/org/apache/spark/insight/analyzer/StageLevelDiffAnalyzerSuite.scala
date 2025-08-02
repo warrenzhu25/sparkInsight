@@ -38,5 +38,6 @@ class StageLevelDiffAnalyzerSuite extends AnyFunSuite with MockitoSugar {
     assert(result.name == "Stage Level Performance Diff")
     assert(result.header == Seq("Stage ID", "Name", "Duration Diff", "Input Diff", "Output Diff", "Shuffle Read Diff", "Shuffle Write Diff"))
     assert(result.rows.nonEmpty)
+    assert(result.rows.head.head == "1")
   }
 }

@@ -24,16 +24,19 @@ object StageLevelDiffAnalyzer extends Analyzer {
       val shuffleReadDiff = stage2.shuffleReadBytes - stage1.shuffleReadBytes
       val shuffleWriteDiff = stage2.shuffleWriteBytes - stage1.shuffleWriteBytes
 
-      Seq(
-        id.toString,
-        stage1.name,
-        s"${durationDiff}ms",
-        s"${inputDiff}B",
-        s"${outputDiff}B",
-        s"${shuffleReadDiff}B",
-        s"${shuffleWriteDiff}B"
+      (
+        durationDiff,
+        Seq(
+          id.toString,
+          stage1.name,
+          s"${durationDiff}ms",
+          s"${inputDiff}B",
+          s"${outputDiff}B",
+          s"${shuffleReadDiff}B",
+          s"${shuffleWriteDiff}B"
+        )
       )
-    }.toSeq
+    }.toSeq.sortBy(_._1.abs).reverse.map(_._2)
 
     AnalysisResult(
       "Stage Level Performance Diff",
