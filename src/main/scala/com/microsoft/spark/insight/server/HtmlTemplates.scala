@@ -1,5 +1,6 @@
 package com.microsoft.spark.insight.server
 
+import org.apache.spark.insight.analyzer.AnalysisResult
 import org.apache.spark.insight.fetcher.SparkApplicationData
 
 object HtmlTemplates {
@@ -161,6 +162,70 @@ object HtmlTemplates {
       |        $$('#jobsTable').DataTable();
       |        $$('#stagesTable').DataTable();
       |        $$('#executorsTable').DataTable();
+      |    } );
+      |  </script>
+      |</body>
+      |</html>
+      |""".stripMargin
+  }
+
+  def diffReportPage(data1: SparkApplicationData, data2: SparkApplicationData, appDiff: AnalysisResult, stageDiff: AnalysisResult): String = {
+    s"""
+      |<!DOCTYPE html>
+      |<html>
+      |<head>
+      |    <title>Spark Insight Diff Report</title>
+      |    <link rel="stylesheet" href="https://unpkg.com/@picocss/pico@latest/css/pico.min.css">
+      |    <link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/1.11.5/css/jquery.dataTables.css">
+      |</head>
+      |<body>
+      |  <main class="container">
+      |    <h1>Spark Insight Diff Report for ${data1.appId} and ${data2.appId}</h1>
+      |    <h2>Application Diff</h2>
+      |    <table id="appDiffTable" class="display">
+      |        <thead>
+      |            <tr>
+      |                <th>${appDiff.header.mkString("</th><th>")}</th>
+      |            </tr>
+      |        </thead>
+      |        <tbody>
+      |        ${
+                appDiff.rows.map { row =>
+                  s"""
+                    |<tr>
+                    |    <td>${row.mkString("</td><td>")}</td>
+                    |</tr>
+                    |""".stripMargin
+                }.mkString
+              }
+      |        </tbody>
+      |    </table>
+      |    <h2>Stage Level Diff</h2>
+      |    <table id="stageDiffTable" class="display">
+      |        <thead>
+      |            <tr>
+      |                <th>${stageDiff.header.mkString("</th><th>")}</th>
+      |            </tr>
+      |        </thead>
+      |        <tbody>
+      |        ${
+                stageDiff.rows.map { row =>
+                  s"""
+                    |<tr>
+                    |    <td>${row.mkString("</td><td>")}</td>
+                    |</tr>
+                    |""".stripMargin
+                }.mkString
+              }
+      |        </tbody>
+      |    </table>
+      |  </main>
+      |  <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+      |  <script src="https://cdn.datatables.net/1.11.5/js/jquery.dataTables.js"></script>
+      |  <script>
+      |    $$(document).ready( function () {
+      |        $$('#appDiffTable').DataTable();
+      |        $$('#stageDiffTable').DataTable();
       |    } );
       |  </script>
       |</body>

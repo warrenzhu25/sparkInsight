@@ -8,6 +8,7 @@ import org.http4s.headers.`Content-Type`
 import org.http4s.{Header, HttpRoutes, MediaType}
 import org.http4s.server.blaze.BlazeServerBuilder
 import org.http4s.implicits._
+import org.apache.spark.insight.analyzer.{AppDiffAnalyzer, StageLevelDiffAnalyzer}
 import org.apache.spark.insight.fetcher.SparkFetcher
 import org.typelevel.ci.CIStringSyntax
 import cats.implicits._
@@ -37,7 +38,9 @@ object WebServer {
           case (Some(url1), Some(url2)) =>
             val appData1 = SparkFetcher.fetchData(url1)
             val appData2 = SparkFetcher.fetchData(url2)
-            Ok(HtmlTemplates.reportPage(appData1), Header.Raw("Content-Type".ci, "text/html"))
+            val appDiff = AppDiffAnalyzer.analysis(appData1, appData2)
+            val stageDiff = StageLevelDiffAnalyzer.analysis(appData1, appData2)
+            Ok(HtmlTemplates.diffReportPage(appData1, appData2, appDiff, stageDiff), Header.Raw("Content-Type".ci, "text/html"))
           case (Some(url1), None) =>
             val appData = SparkFetcher.fetchData(url1)
             Ok(HtmlTemplates.reportPage(appData), Header.Raw("Content-Type".ci, "text/html"))
