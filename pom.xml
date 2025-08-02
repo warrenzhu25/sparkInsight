@@ -29,7 +29,7 @@
           <archive>
             <manifest>
               <mainClass>
-                com.microsoft.spark.insight.cli.GridBenchCliMain
+                com.microsoft.spark.insight.cli.SparkInsightCli
               </mainClass>
             </manifest>
           </archive>
@@ -180,17 +180,12 @@
     <dependency>
       <groupId>org.http4s</groupId>
       <artifactId>http4s-dsl_${scala.binary.version}</artifactId>
-      <version>1.0.0-M30</version>
+      <version>0.23.16</version>
     </dependency>
     <dependency>
       <groupId>org.http4s</groupId>
       <artifactId>http4s-blaze-server_${scala.binary.version}</artifactId>
-      <version>1.0.0-M30</version>
-    </dependency>
-    <dependency>
-      <groupId>org.http4s</groupId>
-      <artifactId>http4s-scalatags_${scala.binary.version}</artifactId>
-      <version>1.0.0-M30</version>
+      <version>0.23.16</version>
     </dependency>
   </dependencies>
   <dependencyManagement>
