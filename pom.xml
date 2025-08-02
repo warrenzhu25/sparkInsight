@@ -172,6 +172,12 @@
       <version>1.17.12</version>
       <scope>test</scope>
     </dependency>
+    <dependency>
+      <groupId>org.scalatestplus</groupId>
+      <artifactId>mockito-4-11_${scala.binary.version}</artifactId>
+      <version>3.2.16.0</version>
+      <scope>test</scope>
+    </dependency>
   </dependencies>
   <dependencyManagement>
     <dependencies>

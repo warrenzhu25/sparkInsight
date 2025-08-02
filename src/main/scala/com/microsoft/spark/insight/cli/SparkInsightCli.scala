@@ -1,6 +1,6 @@
 package com.microsoft.spark.insight.cli
 
-import org.apache.spark.insight.analyzer.{AppDiffAnalyzer, AppSummaryAnalyzer, AutoScalingAnalyzer}
+import org.apache.spark.insight.analyzer.{AppDiffAnalyzer, AppSummaryAnalyzer, AutoScalingAnalyzer, StageLevelDiffAnalyzer}
 import org.apache.spark.insight.fetcher.SparkFetcher
 import picocli.CommandLine
 import picocli.CommandLine.{Command, Option}
@@ -37,6 +37,7 @@ class SparkInsightCli extends Callable[Int] {
       val appData1 = SparkFetcher.fetchData(trackingUrl1)
       val appData2 = SparkFetcher.fetchData(trackingUrl2)
       AppDiffAnalyzer.analysis(appData1, appData2).toCliOutput
+      StageLevelDiffAnalyzer.analysis(appData1, appData2).toCliOutput
     }
     0
   }
