@@ -5,6 +5,9 @@ import org.apache.spark.insight.fetcher.SparkApplicationData
 import java.util.Date
 import scala.concurrent.duration.DurationInt
 
+/**
+ * An analyzer that provides auto-scaling recommendations.
+ */
 object AutoScalingAnalyzer extends Analyzer {
   private val headers = Seq("Config", "Current", "Suggest")
   private val TARGET_DURATION = 2.minutes
@@ -27,7 +30,7 @@ object AutoScalingAnalyzer extends Analyzer {
     var currentMaxExecutors = 0
 
     val events = stageData.flatMap { stage =>
-      val executorsNeeded = math.min(stage.executorRunTime / TARGET_DURATION.toMillis, stage.numTasks).toInt / 4
+      val executorsNeeded = math.min(stage.executorRunTime / TARGET_DURATION.toMillis, s.numTasks).toInt / 4
       Seq((stage.submissionTime, executorsNeeded), (stage.completionTime, -executorsNeeded))
     }.sortBy(_._1) // Sort events by time
 

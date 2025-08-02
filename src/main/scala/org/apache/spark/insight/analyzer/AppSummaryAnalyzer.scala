@@ -3,6 +3,9 @@ package org.apache.spark.insight.analyzer
 import org.apache.spark.insight.fetcher.SparkApplicationData
 import org.apache.spark.status.api.v1.StageData
 
+/**
+ * An analyzer that generates a summary of the Spark application.
+ */
 object AppSummaryAnalyzer extends Analyzer {
   private val headers = Seq("Config", "App1", "App2")
 

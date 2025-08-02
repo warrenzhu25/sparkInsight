@@ -6,12 +6,23 @@ import org.apache.spark.insight.fetcher.SparkApplicationData
 import org.apache.spark.insight.util.Tabulator
 import org.apache.spark.util.Utils
 
+/**
+ * Trait for analyzing Spark application data.
+ */
 trait Analyzer {
   val name: String = this.getClass.getSimpleName
 
   def analysis(data: SparkApplicationData): AnalysisResult
 }
 
+/**
+ * Case class to hold the result of an analysis.
+ *
+ * @param name The name of the analysis.
+ * @param header A sequence of header strings.
+ * @param rows A sequence of rows, where each row is a sequence of strings.
+ * @param description A description of the analysis.
+ */
 case class AnalysisResult(
     name: String,
     header: Seq[String],
@@ -26,6 +37,12 @@ case class AnalysisResult(
   }
 }
 
+/**
+ * Case class to hold a metric.
+ *
+ * @param name The name of the metric.
+ * @param value The value of the metric.
+ */
 case class Metric(
     name: String,
     value: Long,

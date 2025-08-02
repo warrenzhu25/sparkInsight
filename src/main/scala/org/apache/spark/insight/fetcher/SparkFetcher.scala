@@ -7,10 +7,16 @@ import scala.concurrent.duration.{Duration, HOURS}
 import scala.concurrent.{Await, ExecutionContext, Future}
 import scala.util.{Failure, Success, Try}
 
+/**
+ * Trait for fetching Spark application data.
+ */
 trait Fetcher {
   def fetchData(trackingUri: String): SparkApplicationData
 }
 
+/**
+ * Companion object for fetching Spark application data.
+ */
 object SparkFetcher extends Fetcher {
 
   import ExecutionContext.Implicits.global

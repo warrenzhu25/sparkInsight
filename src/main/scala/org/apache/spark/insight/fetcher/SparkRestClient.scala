@@ -16,6 +16,9 @@ import scala.concurrent.{Await, ExecutionContext, Future}
 import scala.io.Source
 import scala.util.control.NonFatal
 
+/**
+ * A REST client for fetching Spark application data from the Spark History Server.
+ */
 class SparkRestClient {
 
   import SparkRestClient._
