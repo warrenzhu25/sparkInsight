@@ -13,6 +13,10 @@ trait Analyzer {
   val name: String = this.getClass.getSimpleName
 
   def analysis(data: SparkApplicationData): AnalysisResult
+
+  def analysis(data1: SparkApplicationData, data2: SparkApplicationData): AnalysisResult = {
+    throw new UnsupportedOperationException(s"$name does not support diff analysis.")
+  }
 }
 
 /**

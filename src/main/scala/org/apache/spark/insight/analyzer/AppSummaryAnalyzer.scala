@@ -21,11 +21,11 @@ object AppSummaryAnalyzer extends Analyzer {
     AnalysisResult("App Summary", headers, rows)
   }
 
-  private def combineSum(left: Map[String, Long], right: Map[String, Long]) = {
+  def combineSum(left: Map[String, Long], right: Map[String, Long]) = {
     left.keySet.union(right.keySet).map(k => k -> (left.getOrElse(k, 0L) + right.getOrElse(k, 0L))).toMap
   }
 
-  private def getMetrics(stageData: StageData) = {
+  def getMetrics(stageData: StageData) = {
     stageData.getClass.getDeclaredFields
       .filter(f => f.getType == java.lang.Long.TYPE)
       .map(f => {

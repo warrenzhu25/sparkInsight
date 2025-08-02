@@ -30,7 +30,7 @@ object AutoScalingAnalyzer extends Analyzer {
     var currentMaxExecutors = 0
 
     val events = stageData.flatMap { stage =>
-      val executorsNeeded = math.min(stage.executorRunTime / TARGET_DURATION.toMillis, s.numTasks).toInt / 4
+      val executorsNeeded = math.min(stage.executorRunTime / TARGET_DURATION.toMillis, stage.numTasks).toInt / 4
       Seq((stage.submissionTime, executorsNeeded), (stage.completionTime, -executorsNeeded))
     }.sortBy(_._1) // Sort events by time
 
