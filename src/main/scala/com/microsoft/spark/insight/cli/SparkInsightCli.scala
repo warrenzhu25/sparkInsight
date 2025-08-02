@@ -1,3 +1,4 @@
+
 package com.microsoft.spark.insight.cli
 
 import org.apache.spark.insight.analyzer.{AppDiffAnalyzer, AppSummaryAnalyzer, AutoScalingAnalyzer, StageLevelDiffAnalyzer}

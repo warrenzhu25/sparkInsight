@@ -1,3 +1,4 @@
+
 package com.microsoft.spark.insight.server
 
 import org.apache.spark.insight.analyzer.AnalysisResult
@@ -169,7 +170,11 @@ object HtmlTemplates {
       |""".stripMargin
   }
 
-  def diffReportPage(data1: SparkApplicationData, data2: SparkApplicationData, appDiff: AnalysisResult, stageDiff: AnalysisResult): String = {
+  def diffReportPage(
+      data1: SparkApplicationData,
+      data2: SparkApplicationData,
+      appDiff: AnalysisResult,
+      stageDiff: AnalysisResult): String = {
     s"""
       |<!DOCTYPE html>
       |<html>

@@ -1,3 +1,4 @@
+
 package org.apache.spark.insight.analyzer
 
 import org.apache.spark.insight.fetcher.SparkApplicationData
@@ -23,14 +24,16 @@ object AutoScalingAnalyzer extends Analyzer {
         s.completionTime.nonEmpty &&
         s.completionTime.get.after(time))
 
-    val initialExecutors = initialStages.map(s => math.min(s.executorRunTime / TARGET_DURATION.toMillis, s.numTasks) / 4)
+    val initialExecutors = initialStages.map(s =>
+        math.min(s.executorRunTime / TARGET_DURATION.toMillis, s.numTasks) / 4)
       .sum
 
     var maxExecutors = 2
     var currentMaxExecutors = 0
 
     val events = stageData.flatMap { stage =>
-      val executorsNeeded = math.min(stage.executorRunTime / TARGET_DURATION.toMillis, stage.numTasks).toInt / 4
+      val executorsNeeded = math.min(stage.executorRunTime / TARGET_DURATION.toMillis,
+          stage.numTasks).toInt / 4
       Seq((stage.submissionTime, executorsNeeded), (stage.completionTime, -executorsNeeded))
     }.sortBy(_._1) // Sort events by time
 

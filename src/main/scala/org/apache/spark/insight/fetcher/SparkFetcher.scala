@@ -1,3 +1,4 @@
+
 package org.apache.spark.insight.fetcher
 
 import org.apache.hadoop.conf.Configuration

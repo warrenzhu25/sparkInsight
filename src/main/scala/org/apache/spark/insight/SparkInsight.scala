@@ -1,3 +1,4 @@
+
 package org.apache.spark.insight
 
 import org.apache.spark.insight.analyzer.{AppSummaryAnalyzer, AutoScalingAnalyzer}
@@ -17,7 +18,7 @@ class SparkInsight extends Callable[Int] {
 
   private val analyzers = Seq(
     AutoScalingAnalyzer,
-    AppSummaryAnalyzer,
+    AppSummaryAnalyzer
   )
 
   @Option(names = Array("-u", "--url"), paramLabel = "URL",

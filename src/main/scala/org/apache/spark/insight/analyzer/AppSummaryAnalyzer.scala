@@ -1,3 +1,4 @@
+
 package org.apache.spark.insight.analyzer
 
 import org.apache.spark.insight.fetcher.SparkApplicationData
@@ -21,11 +22,11 @@ object AppSummaryAnalyzer extends Analyzer {
     AnalysisResult("App Summary", headers, rows)
   }
 
-  def combineSum(left: Map[String, Long], right: Map[String, Long]) = {
+  def combineSum(left: Map[String, Long], right: Map[String, Long]): Map[String, Long] = {
     left.keySet.union(right.keySet).map(k => k -> (left.getOrElse(k, 0L) + right.getOrElse(k, 0L))).toMap
   }
 
-  def getMetrics(stageData: StageData) = {
+  def getMetrics(stageData: StageData): Map[String, Long] = {
     stageData.getClass.getDeclaredFields
       .filter(f => f.getType == java.lang.Long.TYPE)
       .map(f => {

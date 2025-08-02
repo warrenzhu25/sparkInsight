@@ -1,3 +1,4 @@
+
 package org.apache.spark.insight.analyzer
 
 import java.util.concurrent.TimeUnit
@@ -34,10 +35,12 @@ case class AnalysisResult(
     description: String = "") {
 
   def toCliOutput: Unit = {
+    // scalastyle:off println
     print(s"""
              |$name - $description
              |${Tabulator.format(header +: rows)}
              |""".stripMargin)
+    // scalastyle:on println
   }
 }
 
@@ -49,7 +52,7 @@ case class AnalysisResult(
  */
 case class Metric(
     name: String,
-    value: Long,
+    value: Long
 ) {
   private def displayText(): String = {
     try {
@@ -65,7 +68,9 @@ case class Metric(
         value.toString
       }
     } catch {
-      case e :Exception => println(s"Failed to format $name $value")
+      // scalastyle:off println
+      case e: Exception => println(s"Failed to format $name $value")
+        // scalastyle:on println
         value.toString
     }
   }

@@ -1,3 +1,4 @@
+
 package org.apache.spark.insight.util
 
 import com.fasterxml.jackson.databind.{DeserializationFeature, ObjectMapper}

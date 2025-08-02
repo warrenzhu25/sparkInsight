@@ -1,3 +1,4 @@
+
 package com.microsoft.spark.insight.server
 
 import cats.effect.IO
@@ -42,7 +43,8 @@ object WebServer {
             val appData2 = SparkFetcher.fetchData(url2)
             val appDiff = AppDiffAnalyzer.analysis(appData1, appData2)
             val stageDiff = StageLevelDiffAnalyzer.analysis(appData1, appData2)
-            Ok(HtmlTemplates.diffReportPage(appData1, appData2, appDiff, stageDiff), Header.Raw("Content-Type".ci, "text/html"))
+            Ok(HtmlTemplates.diffReportPage(appData1, appData2, appDiff, stageDiff),
+                Header.Raw("Content-Type".ci, "text/html"))
           case (Some(url1), None) =>
             val appData = SparkFetcher.fetchData(url1)
             Ok(HtmlTemplates.reportPage(appData), Header.Raw("Content-Type".ci, "text/html"))
