@@ -1,0 +1,15 @@
+#!/bin/bash
+
+# Get the directory of the script
+SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )"
+PROJECT_DIR="$(dirname "$SCRIPT_DIR")"
+JAR_PATH="$PROJECT_DIR/target/spark-insight-1.0-SNAPSHOT-jar-with-dependencies.jar"
+
+# Build the project if the JAR does not exist
+if [ ! -f "$JAR_PATH" ]; then
+  echo "JAR file not found. Building the project..."
+  (cd "$PROJECT_DIR" && mvn -f pom.xml clean package)
+fi
+
+# Run the application
+java -jar "$JAR_PATH" "$@"

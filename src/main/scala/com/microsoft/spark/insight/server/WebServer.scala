@@ -6,7 +6,8 @@ import org.http4s.HttpRoutes
 import org.http4s.dsl.io._
 import org.http4s.headers.`Content-Type`
 import org.http4s.{Header, HttpRoutes, MediaType}
-import org.http4s.server.blaze.BlazeServerBuilder
+import org.http4s.ember.server.EmberServerBuilder
+import com.comcast.ip4s._
 import org.http4s.implicits._
 import org.apache.spark.insight.analyzer.{AppDiffAnalyzer, StageLevelDiffAnalyzer}
 import org.apache.spark.insight.fetcher.SparkFetcher
@@ -17,10 +18,11 @@ import com.microsoft.spark.insight.server.HtmlTemplates
 object WebServer {
 
   def main(args: Array[String]): Unit = {
-    val server = BlazeServerBuilder[IO]
-      .bindHttp(8080, "localhost")
+    val server = EmberServerBuilder.default[IO]
+      .withHost(host"localhost")
+      .withPort(port"8080")
       .withHttpApp(routes.orNotFound)
-      .resource
+      .build
       .use(_ => IO.never)
       .as(cats.effect.ExitCode.Success)
     server.unsafeRunSync()

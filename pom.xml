@@ -184,8 +184,18 @@
     </dependency>
     <dependency>
       <groupId>org.http4s</groupId>
-      <artifactId>http4s-blaze-server_${scala.binary.version}</artifactId>
+      <artifactId>http4s-ember-server_${scala.binary.version}</artifactId>
       <version>0.23.16</version>
+    </dependency>
+    <dependency>
+      <groupId>org.slf4j</groupId>
+      <artifactId>slf4j-simple</artifactId>
+      <version>1.7.32</version>
+    </dependency>
+    <dependency>
+      <groupId>org.typelevel</groupId>
+      <artifactId>cats-effect-std_${scala.binary.version}</artifactId>
+      <version>3.3.14</version>
     </dependency>
   </dependencies>
   <dependencyManagement>
