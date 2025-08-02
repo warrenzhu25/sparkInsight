@@ -16,7 +16,7 @@ object SparkFetcher extends Fetcher {
   import ExecutionContext.Implicits.global
 
   private[fetcher] lazy val hadoopConfiguration: Configuration = new Configuration()
-  private[fetcher] lazy val sparkRestClient: SparkRestClient = new SparkRestClient()
+  private[fetcher] var sparkRestClient: SparkRestClient = new SparkRestClient()
   private val logger: Logger = Logger.getLogger(SparkFetcher.getClass)
   private val DEFAULT_TIMEOUT = Duration(1, HOURS)
 
