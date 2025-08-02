@@ -2,14 +2,26 @@ package org.apache.spark.insight.analyzer
 
 import org.apache.spark.insight.fetcher.SparkApplicationData
 
+import java.util.Date
 import scala.concurrent.duration.DurationInt
 
-object MaxExecutorAnalyzer extends Analyzer {
+object AutoScalingAnalyzer extends Analyzer {
   private val headers = Seq("Config", "Current", "Suggest")
   private val TARGET_DURATION = 2.minutes
 
   override def analysis(sparkAppData: SparkApplicationData): AnalysisResult = {
     val stageData = sparkAppData.stageData
+    val appStartTime = sparkAppData.appInfo.attempts.head.startTime
+    val time = new Date(appStartTime.getTime + 1000 * 60 * 2)
+
+    val initialStages = stageData.filter(s =>
+      s.submissionTime.nonEmpty &&
+      s.submissionTime.get.before(time) &&
+        s.completionTime.nonEmpty &&
+        s.completionTime.get.after(time))
+
+    val initialExecutors = initialStages.map(s => math.min(s.executorRunTime / TARGET_DURATION.toMillis, s.numTasks) / 4)
+      .sum
 
     var maxExecutors = 2
     var currentMaxExecutors = 0
@@ -24,6 +36,9 @@ object MaxExecutorAnalyzer extends Analyzer {
       maxExecutors = Math.max(maxExecutors, currentMaxExecutors)
     }
 
-    AnalysisResult("Max Executor", headers, Seq(Seq("maxExecutors", "2", maxExecutors.toString)))
+    AnalysisResult("Auto Scaling", headers, Seq(
+      Seq("initialExecutors", "2", initialExecutors.toString),
+      Seq("maxExecutors", "2", maxExecutors.toString)
+    ))
   }
 }
