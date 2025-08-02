@@ -7,7 +7,7 @@ import org.apache.spark.status.api.v1.StageData
  * An analyzer that generates a summary of the Spark application.
  */
 object AppSummaryAnalyzer extends Analyzer {
-  private val headers = Seq("Config", "App1", "App2")
+  private val headers = Seq("Metric", "Value")
 
   override def analysis(sparkAppData: SparkApplicationData): AnalysisResult = {
     val stageData = sparkAppData.stageData
