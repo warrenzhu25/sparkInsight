@@ -1,7 +1,7 @@
 
 package com.microsoft.spark.insight.cli
 
-import org.apache.spark.insight.analyzer.{AppDiffAnalyzer, AppSummaryAnalyzer, AutoScalingAnalyzer, ExecutorAnalyzer, StageLevelDiffAnalyzer}
+import org.apache.spark.insight.analyzer.{AppDiffAnalyzer, AppSummaryAnalyzer, AutoScalingAnalyzer, ConfigDiffAnalyzer, ExecutorAnalyzer, StageLevelDiffAnalyzer}
 import org.apache.spark.insight.fetcher.SparkFetcher
 import picocli.CommandLine
 import picocli.CommandLine.{Command, Option}
@@ -52,6 +52,7 @@ class RunCommand extends Callable[Int] {
       val appData2 = SparkFetcher.fetchData(getFullUrl(trackingUrl2))
       AppDiffAnalyzer.analysis(appData1, appData2).toCliOutput
       StageLevelDiffAnalyzer.analysis(appData1, appData2).toCliOutput
+      ConfigDiffAnalyzer.analysis(appData1, appData2).toCliOutput
     }
     0
   }
