@@ -1,3 +1,4 @@
+
 package org.apache.spark.insight.analyzer
 
 import org.apache.spark.insight.fetcher.SparkApplicationData
@@ -30,6 +31,18 @@ object AppDiffAnalyzer extends Analyzer {
   )
 
   override def analysis(data1: SparkApplicationData, data2: SparkApplicationData): AnalysisResult = {
+    val appEndTime1 = data1.appInfo.attempts.head.endTime.getTime
+    val totalExecutorTime1 = data1.executorSummaries.map { exec =>
+      val removeTime = exec.removeTime.map(_.getTime).getOrElse(appEndTime1)
+      removeTime - exec.addTime.getTime
+    }.sum
+
+    val appEndTime2 = data2.appInfo.attempts.head.endTime.getTime
+    val totalExecutorTime2 = data2.executorSummaries.map { exec =>
+      val removeTime = exec.removeTime.map(_.getTime).getOrElse(appEndTime2)
+      removeTime - exec.addTime.getTime
+    }.sum
+
     val rows = metrics.map { metric =>
       val value1 = data1.stageData.map(metric.value).sum(Numeric.LongIsIntegral)
       val value2 = data2.stageData.map(metric.value).sum(Numeric.LongIsIntegral)
@@ -45,11 +58,24 @@ object AppDiffAnalyzer extends Analyzer {
       )
     }
 
+    val totalExecutorTimeDiff = totalExecutorTime2 - totalExecutorTime1
+    val totalExecutorTimeDiffPercentage = if (totalExecutorTime1 == 0) "N/A" else f"${(totalExecutorTimeDiff * 100.0 / totalExecutorTime1)}%.2f%%"
+
+    val derivedRows = Seq(
+      Seq(
+        "Total Executor Time",
+        s"${TimeUnit.MILLISECONDS.toMinutes(totalExecutorTime1)}",
+        s"${TimeUnit.MILLISECONDS.toMinutes(totalExecutorTime2)}",
+        s"$totalExecutorTimeDiffPercentage",
+        "Total time across all executors (minutes)"
+      )
+    )
+
     val headers = Seq("Metric", "App1", "App2", "Diff", "Metric Description")
     AnalysisResult(
       s"Spark Application Diff Report for ${data1.appInfo.id} and ${data2.appInfo.id}",
       headers,
-      rows)
+      rows ++ derivedRows)
   }
 
   override def analysis(data: SparkApplicationData): AnalysisResult = {

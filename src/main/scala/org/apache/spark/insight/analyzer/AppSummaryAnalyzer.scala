@@ -1,3 +1,4 @@
+
 package org.apache.spark.insight.analyzer
 
 import org.apache.spark.insight.fetcher.SparkApplicationData
@@ -91,10 +92,16 @@ object AppSummaryAnalyzer extends Analyzer {
 
   override def analysis(sparkAppData: SparkApplicationData): AnalysisResult = {
     val stageData = sparkAppData.stageData
-    val totalRuntime = sparkAppData.appInfo.attempts.head.duration
+    val appInfo = sparkAppData.appInfo
+    val appEndTime = appInfo.attempts.head.endTime.getTime
+    val totalRuntime = appInfo.attempts.head.duration
     val totalShuffleTime = stageData.map(_.shuffleFetchWaitTime).sum
     val executorRuntimeWithoutShuffle = stageData.map(_.executorRunTime).sum - totalShuffleTime
     val netIOTime = stageData.map(s => s.inputBytes + s.outputBytes).sum(Numeric.LongIsIntegral)
+    val totalExecutorTime = sparkAppData.executorSummaries.map { exec =>
+      val removeTime = exec.removeTime.map(_.getTime).getOrElse(appEndTime)
+      removeTime - exec.addTime.getTime
+    }.sum
 
     val calculatedMetrics = metrics.map { m =>
       val totalValue = stageData.map(m.value).sum(Numeric.LongIsIntegral)
@@ -107,6 +114,10 @@ object AppSummaryAnalyzer extends Analyzer {
         "Total Runtime",
         s"${TimeUnit.MILLISECONDS.toMinutes(totalRuntime)}",
         "Total elapsed running time (minutes)"),
+      Seq(
+        "Total Executor Time",
+        s"${TimeUnit.MILLISECONDS.toMinutes(totalExecutorTime)}",
+        "Total time across all executors (minutes)"),
       Seq(
         "Executor Runtime w/o Shuffle",
         s"${TimeUnit.MILLISECONDS.toMinutes(executorRuntimeWithoutShuffle)}",

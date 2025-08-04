@@ -1,9 +1,12 @@
+
 package org.apache.spark.insight.analyzer
 
 import org.apache.spark.insight.fetcher.SparkApplicationData
 import org.apache.spark.resource.ResourceProfile
-import org.apache.spark.status.api.v1.{ApplicationInfo, StageData, StageStatus, AccumulableInfo => UIAccumulableInfo}
+import org.apache.spark.status.api.v1.{ApplicationAttemptInfo, ApplicationInfo, StageData, StageStatus, AccumulableInfo => UIAccumulableInfo}
 import org.scalatest.funsuite.AnyFunSuite
+
+import java.util.Date
 
 class AppDiffAnalyzerSuite extends AnyFunSuite {
 
@@ -78,7 +81,17 @@ class AppDiffAnalyzerSuite extends AnyFunSuite {
       isShufflePushEnabled = false,
       shuffleMergersCount = 0
     )
-    val appInfo = new ApplicationInfo("app-id", "app-name", None, None, None, None, Seq())
+    val attempt = ApplicationAttemptInfo(
+      attemptId = Some("1"),
+      startTime = new Date(0),
+      endTime = new Date(10000),
+      lastUpdated = new Date(10000),
+      duration = 10000,
+      sparkUser = "test-user",
+      completed = true,
+      appSparkVersion = "3.5.0"
+    )
+    val appInfo = new ApplicationInfo("app-id", "app-name", None, None, None, None, Seq(attempt))
     val appData1 = SparkApplicationData("app-id-1", Map(), appInfo, Seq(), Seq(stageData1), Seq(), Map())
     val appData2 = SparkApplicationData("app-id-2", Map(), appInfo, Seq(), Seq(stageData1), Seq(), Map())
 
