@@ -27,6 +27,11 @@ class SparkRestClient {
 
   private val client: Client = ClientBuilder.newClient()
 
+  def listApplications(historyServerUri: String): Seq[ApplicationInfo] = {
+    val apiTarget = getApiTarget(historyServerUri)
+    val target = apiTarget.path("applications")
+    get(target, fromJson[Seq[ApplicationInfo]])
+  }
 
   def fetchData(trackingUrl: String)(
     implicit ec: ExecutionContext
@@ -102,7 +107,8 @@ class SparkRestClient {
   private def spilt(trackingUrl: String): (String, String) = {
     val uri = new URI(trackingUrl)
     val host = s"${uri.getScheme}://${uri.getHost}:${uri.getPort}"
-    val appId = uri.getPath.split('/').find(_.startsWith("app")).getOrElse("")
+    val path = uri.getPath
+    val appId = path.substring(path.lastIndexOf('/') + 1)
     (host, appId)
   }
 
@@ -188,6 +194,7 @@ object SparkRestClient {
 
   def get[T](webTarget: WebTarget, converter: String => T): T =
     try {
+      println(s"Fetching URL: ${webTarget.getUri}")
       converter(webTarget.request(MediaType.APPLICATION_JSON).get(classOf[String]))
     } catch {
       case NonFatal(e) =>

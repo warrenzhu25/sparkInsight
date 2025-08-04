@@ -1,4 +1,3 @@
-
 package org.apache.spark.insight.analyzer
 
 import org.apache.spark.insight.fetcher.SparkApplicationData
@@ -126,7 +125,7 @@ object AppDiffAnalyzer extends Analyzer {
       )
     ) ++ rows.filter(r => r.head.contains("Time"))
 
-    val headers = Seq("Metric", "App1", "App2", "Diff", "Metric Description")
+    val headers = Seq("Metric", s"App1", s"App2", "Diff", "Metric Description")
     val categoryHeader = Seq("", "", "", "", "")
     val allMetrics = Seq(
       Seq("Time", "", "", "", ""),

@@ -1,4 +1,3 @@
-
 package org.apache.spark.insight.fetcher
 
 import org.apache.hadoop.conf.Configuration
@@ -7,13 +6,6 @@ import org.apache.log4j.Logger
 import scala.concurrent.duration.{Duration, HOURS}
 import scala.concurrent.{Await, ExecutionContext, Future}
 import scala.util.{Failure, Success, Try}
-
-/**
- * Trait for fetching Spark application data.
- */
-trait Fetcher {
-  def fetchData(trackingUri: String): SparkApplicationData
-}
 
 /**
  * Companion object for fetching Spark application data.
@@ -26,6 +18,15 @@ object SparkFetcher extends Fetcher {
   private[fetcher] var sparkRestClient: SparkRestClient = new SparkRestClient()
   private val logger: Logger = Logger.getLogger(SparkFetcher.getClass)
   private val DEFAULT_TIMEOUT = Duration(1, HOURS)
+
+  override def getRecentApplications(historyServerUri: String, appName: Option[String], limit: Int = 2): Seq[SparkApplicationData] = {
+    val apps = sparkRestClient.listApplications(historyServerUri)
+    val filteredApps = appName.map(name => apps.filter(_.name.contains(name))).getOrElse(apps)
+    val sortedApps = filteredApps.sortBy(_.attempts.head.startTime).reverse
+    println("Found applications:")
+    sortedApps.foreach(app => println(s"  ${app.id}"))
+    sortedApps.take(limit).map(app => fetchData(s"$historyServerUri/applications/${app.id}"))
+  }
 
   override def fetchData(trackingUrl: String): SparkApplicationData = {
     doFetchData(trackingUrl) match {

@@ -1,8 +1,7 @@
-
 package com.microsoft.spark.insight.cli
 
 import org.apache.spark.insight.analyzer.{AppDiffAnalyzer, AppSummaryAnalyzer, AutoScalingAnalyzer, ConfigDiffAnalyzer, ExecutorAnalyzer, StageLevelDiffAnalyzer}
-import org.apache.spark.insight.fetcher.SparkFetcher
+import org.apache.spark.insight.fetcher.{Fetcher, SparkFetcher}
 import picocli.CommandLine
 import picocli.CommandLine.{Command, Option}
 
@@ -27,13 +26,18 @@ class RunCommand extends Callable[Int] {
   )
 
   @Option(names = Array("-u1", "--url1"), paramLabel = "URL1",
-    description = Array("Spark app tracking url 1"),
-    required = true)
+    description = Array("Spark app tracking url 1"))
   private var trackingUrl1: String = _
 
   @Option(names = Array("-u2", "--url2"), paramLabel = "URL2",
     description = Array("Spark app tracking url 2"))
   private var trackingUrl2: String = _
+
+  @Option(names = Array("-n", "--app-name"), paramLabel = "APP_NAME",
+    description = Array("Spark application name"))
+  private var appName: String = _
+
+  private[cli] var fetcher: Fetcher = SparkFetcher
 
   private def getFullUrl(urlOrAppId: String): String = {
     if (urlOrAppId.startsWith("http")) {
@@ -44,12 +48,24 @@ class RunCommand extends Callable[Int] {
   }
 
   def call(): Int = {
-    if (trackingUrl2 == null) {
-      val appData = SparkFetcher.fetchData(getFullUrl(trackingUrl1))
+    if (appName != null) {
+      val apps = fetcher.getRecentApplications("http://localhost:18080", Some(appName))
+      if (apps.size < 2) {
+        println("Could not find two recent applications with that name.")
+        return 1
+      }
+      val appData1 = apps(0)
+      val appData2 = apps(1)
+      println(s"Diffing applications: ${appData1.appId} and ${appData2.appId}")
+      AppDiffAnalyzer.analysis(appData1, appData2).toCliOutput
+      StageLevelDiffAnalyzer.analysis(appData1, appData2).toCliOutput
+      ConfigDiffAnalyzer.analysis(appData1, appData2).toCliOutput
+    } else if (trackingUrl2 == null) {
+      val appData = fetcher.fetchData(getFullUrl(trackingUrl1))
       analyzers.map(_.analysis(appData)).foreach(_.toCliOutput)
     } else {
-      val appData1 = SparkFetcher.fetchData(getFullUrl(trackingUrl1))
-      val appData2 = SparkFetcher.fetchData(getFullUrl(trackingUrl2))
+      val appData1 = fetcher.fetchData(getFullUrl(trackingUrl1))
+      val appData2 = fetcher.fetchData(getFullUrl(trackingUrl2))
       AppDiffAnalyzer.analysis(appData1, appData2).toCliOutput
       StageLevelDiffAnalyzer.analysis(appData1, appData2).toCliOutput
       ConfigDiffAnalyzer.analysis(appData1, appData2).toCliOutput
