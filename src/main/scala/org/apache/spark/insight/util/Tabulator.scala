@@ -10,7 +10,8 @@ object Tabulator {
       val stringTable = table.map(_.map(_.toString))
       val colSizes = stringTable.transpose.map(_.map(_.length).max)
       val rows = for (row <- stringTable) yield formatRow(row, colSizes)
-      formatRows(rowSeparator(colSizes), rows)
+      val separator = rowSeparator(colSizes)
+      formatRows(separator, rows)
   }
 
   private def formatRows(rowSeparator: String, rows: Seq[String]): String = (rowSeparator ::
@@ -21,15 +22,15 @@ object Tabulator {
     List()).mkString("\n")
 
   private def formatRow(row: Seq[Any], colSizes: Seq[Int]): String = {
-    val cells =
+    val cells = 
       for ((item, size) <- row.zip(colSizes))
-        yield if (size == 0) "" else (" %-" + size + "s").format(item)
-    cells.mkString("| ", " | ", " |")
+        yield if (size == 0) "" else (" %-" + size + "s ").format(item)
+    cells.mkString("|","|","|")
   }
 
   private def rowSeparator(colSizes: Seq[Int]): String =
     colSizes.map {
       col =>
-        "-" * (col + 2)
-    }.mkString("+", "+", "+")
+        "-" * (col + 3)
+    }.mkString("+","+","+")
 }
