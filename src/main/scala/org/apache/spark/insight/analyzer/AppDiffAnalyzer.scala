@@ -1,3 +1,4 @@
+
 package org.apache.spark.insight.analyzer
 
 import org.apache.spark.insight.fetcher.SparkApplicationData
@@ -14,27 +15,28 @@ object AppDiffAnalyzer extends Analyzer {
   case class Metric(
       name: String,
       value: StageData => Long,
+      description: String,
       isTime: Boolean = false,
       isNanoTime: Boolean = false,
       isSize: Boolean = false,
       isRecords: Boolean = false)
 
   private val metrics = Seq(
-    Metric("Disk Spill Size", s => s.diskBytesSpilled, isSize = true),
-    Metric("Executor CPU Time", s => s.executorCpuTime, isNanoTime = true),
-    Metric("Executor Runtime", s => s.executorRunTime, isTime = true),
-    Metric("Input Records", s => s.inputRecords, isRecords = true),
-    Metric("Input Size", s => s.inputBytes, isSize = true),
-    Metric("JVM GC Time", s => s.jvmGcTime, isTime = true),
-    Metric("Memory Spill Size", s => s.memoryBytesSpilled, isSize = true),
-    Metric("Output Records", s => s.outputRecords, isRecords = true),
-    Metric("Output Size", s => s.outputBytes, isSize = true),
-    Metric("Shuffle Read Records", s => s.shuffleReadRecords, isRecords = true),
-    Metric("Shuffle Read Size", s => s.shuffleReadBytes, isSize = true),
-    Metric("Shuffle Read Wait Time", s => s.shuffleFetchWaitTime, isTime = true),
-    Metric("Shuffle Write Records", s => s.shuffleWriteRecords, isRecords = true),
-    Metric("Shuffle Write Size", s => s.shuffleWriteBytes, isSize = true),
-    Metric("Shuffle Write Time", s => s.shuffleWriteTime, isTime = true)
+    Metric("Disk Spill Size", s => s.diskBytesSpilled, "Total data spilled to disk (GB)", isSize = true),
+    Metric("Executor CPU Time", s => s.executorCpuTime, "Total executor CPU time on main task thread (minutes)", isNanoTime = true),
+    Metric("Executor Runtime", s => s.executorRunTime, "Total executor running time (minutes)", isTime = true),
+    Metric("Input Records", s => s.inputRecords, "Total records consumed by tasks (thousands)", isRecords = true),
+    Metric("Input Size", s => s.inputBytes, "Total input data consumed by tasks (GB)", isSize = true),
+    Metric("JVM GC Time", s => s.jvmGcTime, "Total JVM garbage collection time (minutes)", isTime = true),
+    Metric("Memory Spill Size", s => s.memoryBytesSpilled, "Total data spilled to memory (GB)", isSize = true),
+    Metric("Output Records", s => s.outputRecords, "Total records produced by tasks (thousands)", isRecords = true),
+    Metric("Output Size", s => s.outputBytes, "Total output data produced by tasks (GB)", isSize = true),
+    Metric("Shuffle Read Records", s => s.shuffleReadRecords, "Total shuffle records consumed by tasks (thousands)", isRecords = true),
+    Metric("Shuffle Read Size", s => s.shuffleReadBytes, "Total shuffle data consumed by tasks (GB)", isSize = true),
+    Metric("Shuffle Read Wait Time", s => s.shuffleFetchWaitTime, "Total task time blocked waiting for remote shuffle data (minutes)", isTime = true),
+    Metric("Shuffle Write Records", s => s.shuffleWriteRecords, "Total shuffle records produced by tasks (thousands)", isRecords = true),
+    Metric("Shuffle Write Size", s => s.shuffleWriteBytes, "Total shuffle data produced by tasks (GB)", isSize = true),
+    Metric("Shuffle Write Time", s => s.shuffleWriteTime, "Total shuffle write time spent by tasks (minutes)", isTime = true)
   )
 
   override def analysis(data1: SparkApplicationData, data2: SparkApplicationData): AnalysisResult = {
@@ -48,11 +50,12 @@ object AppDiffAnalyzer extends Analyzer {
         metric.name,
         FormatUtils.formatValue(value1, metric.isTime, metric.isNanoTime, metric.isSize, metric.isRecords),
         FormatUtils.formatValue(value2, metric.isTime, metric.isNanoTime, metric.isSize, metric.isRecords),
-        s"${FormatUtils.formatValue(diff, metric.isTime, metric.isNanoTime, metric.isSize, metric.isRecords)} ($diffPercentage)"
+        s"${FormatUtils.formatValue(diff, metric.isTime, metric.isNanoTime, metric.isSize, metric.isRecords)} ($diffPercentage)",
+        metric.description
       )
     }
 
-    val headers = Seq("Metric", "App1", "App2", "Diff")
+    val headers = Seq("Metric", "App1", "App2", "Diff", "Metric Description")
     AnalysisResult(
       s"Spark Application Diff Report for ${data1.appInfo.id} and ${data2.appInfo.id}",
       headers,

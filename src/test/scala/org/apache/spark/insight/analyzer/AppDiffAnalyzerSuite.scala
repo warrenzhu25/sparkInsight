@@ -84,7 +84,7 @@ class AppDiffAnalyzerSuite extends AnyFunSuite {
 
     val result = AppDiffAnalyzer.analysis(appData1, appData2)
     assert(result.name == s"Spark Application Diff Report for ${appData1.appInfo.id} and ${appData2.appInfo.id}")
-    assert(result.header == Seq("Metric", "App1", "App2", "Diff"))
+    assert(result.header == Seq("Metric", "App1", "App2", "Diff", "Metric Description"))
     assert(result.rows.nonEmpty)
   }
 }
