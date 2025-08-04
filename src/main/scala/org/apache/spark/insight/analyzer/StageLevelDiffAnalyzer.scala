@@ -48,7 +48,7 @@ object StageLevelDiffAnalyzer extends Analyzer {
           )
         ))
       }
-    }.toSeq.sortBy(_._1.abs).reverse.map(_._2)
+    }.toSeq.sortBy(_._1.abs).reverse.take(5).map(_._2)
 
     AnalysisResult(
       s"Stage Level Diff Report for ${data1.appInfo.id} and ${data2.appInfo.id}",
