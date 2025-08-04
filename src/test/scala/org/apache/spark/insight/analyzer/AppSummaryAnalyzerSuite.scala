@@ -111,7 +111,7 @@ class AppSummaryAnalyzerSuite extends AnyFunSuite {
 
     val analysisResult = AppSummaryAnalyzer.analysis(sparkAppData)
 
-    assert(analysisResult.name === "App Summary")
+    assert(analysisResult.name === s"Spark Application Performance Report for applicationId: ${appInfo.id}")
     assert(analysisResult.rows.nonEmpty)
   }
 }

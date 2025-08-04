@@ -25,10 +25,7 @@ object AppDiffAnalyzer extends Analyzer {
   }
 
   private def getMetrics(sparkAppData: SparkApplicationData): Map[String, Long] = {
-    val stageData = sparkAppData.stageData
-    stageData
-      .map(s => AppSummaryAnalyzer.getMetrics(s))
-      .reduce(AppSummaryAnalyzer.combineSum)
+    AppMetrics.getMetrics(sparkAppData)
   }
 
   override def analysis(data: SparkApplicationData): AnalysisResult = {

@@ -21,7 +21,11 @@ To analyze a Spark application, run the following command:
 
 Replace `<app_id>` with your Spark application ID.
 
-## Summarized metrics for all of the jobs:
+## Example output:
+
+
+```text
+Spark Application Performance Report for applicationId: <app_id>
 
 ╔══════════════════════════════╤═══════════╤═════════════════════════════════════════════════════════════════════════════════════════╗
 ║ Metric name                  │ Value     │ Metric description                                                                      ║
@@ -62,6 +66,7 @@ Replace `<app_id>` with your Spark application ID.
 ╟──────────────────────────────┼───────────┼─────────────────────────────────────────────────────────────────────────────────────────╢
 ║ Total Runtime                │ 40.74     │ Total elapsed running time (in minutes)                                                 ║
 ╚══════════════════════════════╧═══════════╧═════════════════════════════════════════════════════════════════════════════════════════╝
+```
 
 ## Building from Source
 

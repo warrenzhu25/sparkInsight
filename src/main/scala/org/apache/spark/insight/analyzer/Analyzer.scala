@@ -36,7 +36,7 @@ case class AnalysisResult(
 
   def toCliOutput: Unit = {
     // scalastyle:off println
-    print(s"""
+    println(s"""
              |$name - $description
              |${Tabulator.format(header +: rows)}
              |""".stripMargin)

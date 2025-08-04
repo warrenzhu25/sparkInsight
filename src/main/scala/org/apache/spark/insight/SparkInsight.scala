@@ -27,7 +27,12 @@ class SparkInsight extends Callable[Int] {
 
   def call(): Int = {
     val appData = SparkFetcher.fetchData(trackingUrl)
-    analyzers.map(_.analysis(appData)).foreach(_.toCliOutput)
+    analyzers.foreach(analyzer => {
+      println(s"Running analyzer: ${analyzer.getClass.getSimpleName}")
+      val result = analyzer.analysis(appData)
+      result.toCliOutput
+      println("-" * 80)
+    })
     0
   }
 }
