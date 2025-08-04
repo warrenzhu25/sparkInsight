@@ -224,4 +224,79 @@ class ExecutorDiffAnalyzerSuite extends AnyFunSuite {
     assert(result.rows(2) === Seq("2", "0", "", ""))
     assert(result.rows(3) === Seq("3", "0", "", ""))
   }
+
+  test("ExecutorDiffAnalyzer should handle running applications") {
+    val startTime = System.currentTimeMillis() - TimeUnit.MINUTES.toMillis(2)
+    val appInfo1 = ApplicationInfo(
+      id = "app-id-1",
+      name = "test-app",
+      coresGranted = Some(1),
+      maxCores = Some(2),
+      coresPerExecutor = Some(1),
+      memoryPerExecutorMB = Some(1024),
+      attempts = Seq(
+        ApplicationAttemptInfo(
+          attemptId = Some("1"),
+          startTime = new Date(startTime),
+          endTime = new Date(0), // A time in the past
+          lastUpdated = new Date(),
+          duration = 0,
+          sparkUser = "test-user",
+          completed = false,
+          appSparkVersion = "3.5.0"
+        )
+      )
+    )
+    val executorSummaries1 = Seq(
+      new ExecutorSummary(
+        id = "1",
+        hostPort = "localhost:1234",
+        isActive = true,
+        rddBlocks = 0,
+        memoryUsed = 0,
+        diskUsed = 0,
+        totalCores = 1,
+        maxTasks = 1,
+        activeTasks = 0,
+        failedTasks = 0,
+        completedTasks = 0,
+        totalTasks = 0,
+        totalDuration = 0,
+        totalGCTime = 0,
+        totalInputBytes = 0,
+        totalShuffleRead = 0,
+        totalShuffleWrite = 0,
+        isBlacklisted = false,
+        maxMemory = 0,
+        addTime = new Date(startTime),
+        removeTime = None,
+        removeReason = None,
+        executorLogs = Map(),
+        memoryMetrics = None,
+        blacklistedInStages = Set(),
+        peakMemoryMetrics = None,
+        attributes = Map(),
+        resources = Map(),
+        resourceProfileId = 0,
+        isExcluded = false,
+        excludedInStages = Set()
+      )
+    )
+    val appData1 = SparkApplicationData("app-id-1", Map(), appInfo1, Seq(), Seq(), executorSummaries1, Map())
+
+    val appInfo2 = ApplicationInfo(
+      id = "app-id-2",
+      name = "test-app",
+      coresGranted = Some(1),
+      maxCores = Some(2),
+      coresPerExecutor = Some(1),
+      memoryPerExecutorMB = Some(1024),
+      attempts = Seq()
+    )
+    val appData2 = SparkApplicationData("app-id-2", Map(), appInfo2, Seq(), Seq(), Seq(), Map())
+
+    val result = ExecutorDiffAnalyzer.analysis(appData1, appData2)
+    assert(result.rows.nonEmpty)
+    assert(result.rows.head.length == 4)
+  }
 }

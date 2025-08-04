@@ -38,7 +38,10 @@ object ExecutorDiffAnalyzer extends Analyzer {
       return Seq.empty
     }
     val startTime = appInfo.attempts.head.startTime.getTime
-    val endTime = appInfo.attempts.head.endTime.getTime
+    var endTime = appInfo.attempts.head.endTime.getTime
+    if (endTime < startTime) {
+      endTime = System.currentTimeMillis()
+    }
     val executorSummaries = sparkAppData.executorSummaries
 
     val minuteIntervals = (startTime to endTime by TimeUnit.MINUTES.toMillis(1)).map {
