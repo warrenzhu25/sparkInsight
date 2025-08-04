@@ -3,6 +3,8 @@ package org.apache.spark.insight.analyzer
 import org.apache.spark.insight.fetcher.SparkApplicationData
 import org.apache.spark.status.api.v1.StageData
 
+import java.util.concurrent.TimeUnit
+
 /**
  * An analyzer that compares two Spark applications at the stage level.
  */
@@ -29,19 +31,20 @@ object StageLevelDiffAnalyzer extends Analyzer {
         Seq(
           id.toString,
           stage1.name,
-          s"${durationDiff}ms",
-          s"${inputDiff}B",
-          s"${outputDiff}B",
-          s"${shuffleReadDiff}B",
-          s"${shuffleWriteDiff}B"
+          s"${TimeUnit.MILLISECONDS.toSeconds(durationDiff)}s",
+          s"${inputDiff / (1024 * 1024)}MB",
+          s"${outputDiff / (1024 * 1024)}MB",
+          s"${shuffleReadDiff / (1024 * 1024)}MB",
+          s"${shuffleWriteDiff / (1024 * 1024)}MB"
         )
       )
     }.toSeq.sortBy(_._1.abs).reverse.map(_._2)
 
     AnalysisResult(
-      "Stage Level Performance Diff",
+      s"Stage Level Diff Report for ${data1.appInfo.id} and ${data2.appInfo.id}",
       Seq("Stage ID", "Name", "Duration Diff", "Input Diff", "Output Diff", "Shuffle Read Diff", "Shuffle Write Diff"),
-      rows
+      rows,
+      "Compares the performance of common stages between two Spark applications."
     )
   }
 
