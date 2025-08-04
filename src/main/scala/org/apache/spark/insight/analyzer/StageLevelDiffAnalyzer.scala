@@ -40,7 +40,7 @@ object StageLevelDiffAnalyzer extends Analyzer {
           Seq(
             id.toString,
             stage1.name,
-            s"${TimeUnit.MILLISECONDS.toSeconds(durationDiff)}s ($durationDiffPercentage)",
+            s"${TimeUnit.MILLISECONDS.toMinutes(durationDiff)}min ($durationDiffPercentage)",
             s"${inputDiff / (1024 * 1024)}MB ($inputDiffPercentage)",
             s"${outputDiff / (1024 * 1024)}MB ($outputDiffPercentage)",
             s"${shuffleReadDiff / (1024 * 1024)}MB ($shuffleReadDiffPercentage)",
