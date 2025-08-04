@@ -1,3 +1,4 @@
+
 package org.apache.spark.insight.analyzer
 
 import org.apache.spark.insight.fetcher.SparkApplicationData
@@ -111,11 +112,11 @@ class AutoScalingAnalyzerSuite extends AnyFunSuite {
 
     val analysisResult = AutoScalingAnalyzer.analysis(sparkAppData)
 
-    assert(analysisResult.name === "Auto Scaling")
+    assert(analysisResult.name === s"Auto-Scaling Analysis for ${appInfo.id}")
     assert(analysisResult.rows.size === 2)
-    assert(analysisResult.rows(0)(0) === "initialExecutors")
-    assert(analysisResult.rows(0)(2) === "0")
-    assert(analysisResult.rows(1)(0) === "maxExecutors")
-    assert(analysisResult.rows(1)(2) === "2")
+    assert(analysisResult.rows(0)(0) === "Initial Executors")
+    assert(analysisResult.rows(0)(1) === "0")
+    assert(analysisResult.rows(1)(0) === "Max Executors")
+    assert(analysisResult.rows(1)(1) === "2")
   }
 }

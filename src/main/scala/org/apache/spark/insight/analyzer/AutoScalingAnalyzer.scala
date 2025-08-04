@@ -1,4 +1,3 @@
-
 package org.apache.spark.insight.analyzer
 
 import org.apache.spark.insight.fetcher.SparkApplicationData
@@ -10,7 +9,6 @@ import scala.concurrent.duration.DurationInt
  * An analyzer that provides auto-scaling recommendations.
  */
 object AutoScalingAnalyzer extends Analyzer {
-  private val headers = Seq("Config", "Current", "Suggest")
   private val TARGET_DURATION = 2.minutes
 
   override def analysis(sparkAppData: SparkApplicationData): AnalysisResult = {
@@ -42,9 +40,17 @@ object AutoScalingAnalyzer extends Analyzer {
       maxExecutors = Math.max(maxExecutors, currentMaxExecutors)
     }
 
-    AnalysisResult("Auto Scaling", headers, Seq(
-      Seq("initialExecutors", "2", initialExecutors.toString),
-      Seq("maxExecutors", "2", maxExecutors.toString)
-    ))
+    val headers = Seq("Configuration", "Value", "Description")
+    val rows = Seq(
+      Seq("Initial Executors", initialExecutors.toString, "Recommended number of initial executors to provision."),
+      Seq("Max Executors", maxExecutors.toString, "Recommended maximum number of executors for auto-scaling.")
+    )
+
+    AnalysisResult(
+      s"Auto-Scaling Analysis for ${sparkAppData.appInfo.id}",
+      headers,
+      rows,
+      "Provides recommendations for auto-scaling configuration based on application workload."
+    )
   }
 }
