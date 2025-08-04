@@ -1,3 +1,4 @@
+
 package org.apache.spark.insight.analyzer
 
 import org.apache.spark.insight.fetcher.SparkApplicationData
@@ -81,7 +82,14 @@ object AppDiffAnalyzer extends Analyzer {
     val failedExecutorRuntimeDiff = failedExecutorRuntime2 - failedExecutorRuntime1
     val failedExecutorRuntimeDiffPercentage = if (failedExecutorRuntime1 == 0) "N/A" else f"${(failedExecutorRuntimeDiff * 100.0 / failedExecutorRuntime1)}%.2f%%"
 
-    val derivedRows = Seq(
+    val timeRows = Seq(
+      Seq(
+        "Total Runtime",
+        s"${TimeUnit.MILLISECONDS.toMinutes(totalRuntime1)}",
+        s"${TimeUnit.MILLISECONDS.toMinutes(totalRuntime2)}",
+        s"$totalRuntimeDiffPercentage",
+        "Total elapsed running time (minutes)"
+      ),
       Seq(
         "Total Executor Time",
         s"${TimeUnit.MILLISECONDS.toMinutes(totalExecutorTime1)}",
@@ -102,25 +110,15 @@ object AppDiffAnalyzer extends Analyzer {
         s"${TimeUnit.MILLISECONDS.toMinutes(failedExecutorRuntime2)}",
         s"$failedExecutorRuntimeDiffPercentage",
         "Total executor running time for failed stages (minutes)"
-      ),
-      Seq(
-        "Total Runtime",
-        s"${TimeUnit.MILLISECONDS.toMinutes(totalRuntime1)}",
-        s"${TimeUnit.MILLISECONDS.toMinutes(totalRuntime2)}",
-        s"$totalRuntimeDiffPercentage",
-        "Total elapsed running time (minutes)"
       )
-    )
+    ) ++ rows.filter(r => r.head.contains("Time"))
 
     val headers = Seq("Metric", "App1", "App2", "Diff", "Metric Description")
     val categoryHeader = Seq("", "", "", "", "")
     val allMetrics = Seq(
-      Seq("Duration", "", "", "", ""),
+      Seq("Time", "", "", "", ""),
       categoryHeader
-    ) ++ derivedRows ++ Seq(
-      Seq("Executor", "", "", "", ""),
-      categoryHeader
-    ) ++ rows.filter(r => r.head.contains("Executor") || r.head.contains("JVM")) ++ Seq(
+    ) ++ timeRows ++ Seq(
       Seq("I/O", "", "", "", ""),
       categoryHeader
     ) ++ rows.filter(r => r.head.contains("Input") || r.head.contains("Output")) ++ Seq(

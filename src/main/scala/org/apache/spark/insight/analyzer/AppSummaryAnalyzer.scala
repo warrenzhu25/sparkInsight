@@ -1,3 +1,4 @@
+
 package org.apache.spark.insight.analyzer
 
 import org.apache.spark.insight.fetcher.SparkApplicationData
@@ -33,15 +34,12 @@ object AppSummaryAnalyzer extends Analyzer {
       FormatUtils.formatValue(totalValue, isTime, isNanoTime, isSize, isRecords)
     }
 
-    val durationMetrics = Seq(
+    val timeMetrics = Seq(
       Seq("Total Runtime", s"${TimeUnit.MILLISECONDS.toMinutes(totalRuntime)}", "Total elapsed running time (minutes)"),
       Seq("Total Executor Time", s"${TimeUnit.MILLISECONDS.toMinutes(totalExecutorTime)}", "Total time across all executors (minutes)"),
       Seq("Successful Executor Runtime", s"${TimeUnit.MILLISECONDS.toMinutes(successfulExecutorRuntime)}", "Total executor running time for successful stages (minutes)"),
       Seq("Failed Executor Runtime", s"${TimeUnit.MILLISECONDS.toMinutes(failedExecutorRuntime)}", "Total executor running time for failed stages (minutes)"),
-      Seq("Executor Runtime w/o Shuffle", s"${TimeUnit.MILLISECONDS.toMinutes(executorRuntimeWithoutShuffle)}", "Executor run time excluding shuffle time (minutes)")
-    )
-
-    val executorMetrics = Seq(
+      Seq("Executor Runtime w/o Shuffle", s"${TimeUnit.MILLISECONDS.toMinutes(executorRuntimeWithoutShuffle)}", "Executor run time excluding shuffle time (minutes)"),
       Seq("Executor CPU Time", getMetricValue(_.executorCpuTime, isNanoTime = true), "Total executor CPU time on main task thread (minutes)"),
       Seq("JVM GC Time", getMetricValue(_.jvmGcTime, isTime = true), "Total JVM garbage collection time (minutes)")
     )
@@ -68,12 +66,9 @@ object AppSummaryAnalyzer extends Analyzer {
     val headers = Seq("Metric name", "Value", "Metric description")
     val categoryHeader = Seq("", "", "")
     val allMetrics = Seq(
-      Seq("Duration", "", ""),
+      Seq("Time", "", ""),
       categoryHeader
-    ) ++ durationMetrics ++ Seq(
-      Seq("Executor", "", ""),
-      categoryHeader
-    ) ++ executorMetrics ++ Seq(
+    ) ++ timeMetrics ++ Seq(
       Seq("I/O", "", ""),
       categoryHeader
     ) ++ ioMetrics ++ Seq(
