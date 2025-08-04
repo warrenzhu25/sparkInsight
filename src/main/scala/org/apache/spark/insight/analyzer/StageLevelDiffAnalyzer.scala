@@ -1,4 +1,3 @@
-
 package org.apache.spark.insight.analyzer
 
 import org.apache.spark.insight.fetcher.SparkApplicationData
@@ -30,16 +29,22 @@ object StageLevelDiffAnalyzer extends Analyzer {
       if (durationDiff == 0 && inputDiff == 0 && outputDiff == 0 && shuffleReadDiff == 0 && shuffleWriteDiff == 0) {
         None
       } else {
+        val durationDiffPercentage = if (stage1.executorRunTime == 0) "N/A" else f"${(durationDiff * 100.0 / stage1.executorRunTime)}%.2f%%"
+        val inputDiffPercentage = if (stage1.inputBytes == 0) "N/A" else f"${(inputDiff * 100.0 / stage1.inputBytes)}%.2f%%"
+        val outputDiffPercentage = if (stage1.outputBytes == 0) "N/A" else f"${(outputDiff * 100.0 / stage1.outputBytes)}%.2f%%"
+        val shuffleReadDiffPercentage = if (stage1.shuffleReadBytes == 0) "N/A" else f"${(shuffleReadDiff * 100.0 / stage1.shuffleReadBytes)}%.2f%%"
+        val shuffleWriteDiffPercentage = if (stage1.shuffleWriteBytes == 0) "N/A" else f"${(shuffleWriteDiff * 100.0 / stage1.shuffleWriteBytes)}%.2f%%"
+
         Some((
           durationDiff,
           Seq(
             id.toString,
             stage1.name,
-            s"${TimeUnit.MILLISECONDS.toSeconds(durationDiff)}s",
-            s"${inputDiff / (1024 * 1024)}MB",
-            s"${outputDiff / (1024 * 1024)}MB",
-            s"${shuffleReadDiff / (1024 * 1024)}MB",
-            s"${shuffleWriteDiff / (1024 * 1024)}MB"
+            s"${TimeUnit.MILLISECONDS.toSeconds(durationDiff)}s ($durationDiffPercentage)",
+            s"${inputDiff / (1024 * 1024)}MB ($inputDiffPercentage)",
+            s"${outputDiff / (1024 * 1024)}MB ($outputDiffPercentage)",
+            s"${shuffleReadDiff / (1024 * 1024)}MB ($shuffleReadDiffPercentage)",
+            s"${shuffleWriteDiff / (1024 * 1024)}MB ($shuffleWriteDiffPercentage)"
           )
         ))
       }

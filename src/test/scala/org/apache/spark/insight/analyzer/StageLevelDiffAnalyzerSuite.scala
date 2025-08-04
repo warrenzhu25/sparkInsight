@@ -1,3 +1,4 @@
+
 package org.apache.spark.insight.analyzer
 
 import org.apache.spark.insight.fetcher.SparkApplicationData
@@ -40,7 +41,7 @@ class StageLevelDiffAnalyzerSuite extends AnyFunSuite with MockitoSugar {
     assert(result.header == Seq("Stage ID", "Name", "Duration Diff", "Input Diff", "Output Diff", "Shuffle Read Diff", "Shuffle Write Diff"))
     assert(result.rows.nonEmpty)
     assert(result.rows.head.head == "1")
-    assert(result.rows.head(2) == "1s")
-    assert(result.rows.head(3) == "1MB")
+    assert(result.rows.head(2) == "1s (100.00%)")
+    assert(result.rows.head(3) == "1MB (100.00%)")
   }
 }
