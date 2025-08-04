@@ -1,3 +1,4 @@
+
 package org.apache.spark.insight.analyzer
 
 import org.apache.spark.insight.fetcher.SparkApplicationData
@@ -6,13 +7,16 @@ import org.mockito.Mockito._
 import org.scalatest.funsuite.AnyFunSuite
 import org.scalatestplus.mockito.MockitoSugar
 
+import java.util.Date
+
 class StageLevelDiffAnalyzerSuite extends AnyFunSuite with MockitoSugar {
 
   test("StageLevelDiffAnalyzer should generate a diff report") {
     val stageData1 = mock[StageData]
     when(stageData1.stageId).thenReturn(1)
     when(stageData1.name).thenReturn("stage1")
-    when(stageData1.executorRunTime).thenReturn(60000L)
+    when(stageData1.submissionTime).thenReturn(Some(new Date(0)))
+    when(stageData1.completionTime).thenReturn(Some(new Date(60000)))
     when(stageData1.inputBytes).thenReturn(1024L * 1024L)
     when(stageData1.outputBytes).thenReturn(1024L * 1024L)
     when(stageData1.shuffleReadBytes).thenReturn(1024L * 1024L)
@@ -21,7 +25,8 @@ class StageLevelDiffAnalyzerSuite extends AnyFunSuite with MockitoSugar {
     val stageData2 = mock[StageData]
     when(stageData2.stageId).thenReturn(1)
     when(stageData2.name).thenReturn("stage1")
-    when(stageData2.executorRunTime).thenReturn(120000L)
+    when(stageData2.submissionTime).thenReturn(Some(new Date(0)))
+    when(stageData2.completionTime).thenReturn(Some(new Date(120000)))
     when(stageData2.inputBytes).thenReturn(2 * 1024L * 1024L)
     when(stageData2.outputBytes).thenReturn(2 * 1024L * 1024L)
     when(stageData2.shuffleReadBytes).thenReturn(2 * 1024L * 1024L)

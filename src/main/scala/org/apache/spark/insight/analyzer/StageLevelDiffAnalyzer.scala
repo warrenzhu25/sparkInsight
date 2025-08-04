@@ -1,3 +1,4 @@
+
 package org.apache.spark.insight.analyzer
 
 import org.apache.spark.insight.fetcher.SparkApplicationData
@@ -20,7 +21,10 @@ object StageLevelDiffAnalyzer extends Analyzer {
       val stage1 = stages1(id)
       val stage2 = stages2(id)
 
-      val durationDiff = stage2.executorRunTime - stage1.executorRunTime
+      val duration1 = stage1.completionTime.map(_.getTime).getOrElse(0L) - stage1.submissionTime.map(_.getTime).getOrElse(0L)
+      val duration2 = stage2.completionTime.map(_.getTime).getOrElse(0L) - stage2.submissionTime.map(_.getTime).getOrElse(0L)
+      val durationDiff = duration2 - duration1
+
       val inputDiff = stage2.inputBytes - stage1.inputBytes
       val outputDiff = stage2.outputBytes - stage1.outputBytes
       val shuffleReadDiff = stage2.shuffleReadBytes - stage1.shuffleReadBytes
@@ -29,7 +33,7 @@ object StageLevelDiffAnalyzer extends Analyzer {
       if (durationDiff == 0 && inputDiff == 0 && outputDiff == 0 && shuffleReadDiff == 0 && shuffleWriteDiff == 0) {
         None
       } else {
-        val durationDiffPercentage = if (stage1.executorRunTime == 0) "N/A" else f"${(durationDiff * 100.0 / stage1.executorRunTime)}%.2f%%"
+        val durationDiffPercentage = if (duration1 == 0) "N/A" else f"${(durationDiff * 100.0 / duration1)}%.2f%%"
         val inputDiffPercentage = if (stage1.inputBytes == 0) "N/A" else f"${(inputDiff * 100.0 / stage1.inputBytes)}%.2f%%"
         val outputDiffPercentage = if (stage1.outputBytes == 0) "N/A" else f"${(outputDiff * 100.0 / stage1.outputBytes)}%.2f%%"
         val shuffleReadDiffPercentage = if (stage1.shuffleReadBytes == 0) "N/A" else f"${(shuffleReadDiff * 100.0 / stage1.shuffleReadBytes)}%.2f%%"
