@@ -1,4 +1,3 @@
-
 package org.apache.spark.insight.analyzer
 
 import org.apache.spark.insight.fetcher.SparkApplicationData
@@ -16,12 +15,13 @@ object AppDiffAnalyzer extends Analyzer {
       name: String,
       value: StageData => Long,
       isTime: Boolean = false,
+      isNanoTime: Boolean = false,
       isSize: Boolean = false,
       isRecords: Boolean = false)
 
   private val metrics = Seq(
     Metric("Disk Spill Size", s => s.diskBytesSpilled, isSize = true),
-    Metric("Executor CPU Time", s => s.executorCpuTime, isTime = true),
+    Metric("Executor CPU Time", s => s.executorCpuTime, isNanoTime = true),
     Metric("Executor Runtime", s => s.executorRunTime, isTime = true),
     Metric("Input Records", s => s.inputRecords, isRecords = true),
     Metric("Input Size", s => s.inputBytes, isSize = true),
@@ -46,9 +46,9 @@ object AppDiffAnalyzer extends Analyzer {
 
       Seq(
         metric.name,
-        FormatUtils.formatValue(value1, metric.isTime, metric.isSize, metric.isRecords),
-        FormatUtils.formatValue(value2, metric.isTime, metric.isSize, metric.isRecords),
-        s"${FormatUtils.formatValue(diff, metric.isTime, metric.isSize, metric.isRecords)} ($diffPercentage)"
+        FormatUtils.formatValue(value1, metric.isTime, metric.isNanoTime, metric.isSize, metric.isRecords),
+        FormatUtils.formatValue(value2, metric.isTime, metric.isNanoTime, metric.isSize, metric.isRecords),
+        s"${FormatUtils.formatValue(diff, metric.isTime, metric.isNanoTime, metric.isSize, metric.isRecords)} ($diffPercentage)"
       )
     }
 

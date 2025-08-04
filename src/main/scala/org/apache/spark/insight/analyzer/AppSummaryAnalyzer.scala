@@ -1,3 +1,4 @@
+
 package org.apache.spark.insight.analyzer
 
 import org.apache.spark.insight.fetcher.SparkApplicationData
@@ -16,6 +17,7 @@ object AppSummaryAnalyzer extends Analyzer {
       value: StageData => Long,
       description: String,
       isTime: Boolean = false,
+      isNanoTime: Boolean = false,
       isSize: Boolean = false,
       isRecords: Boolean = false)
 
@@ -29,7 +31,7 @@ object AppSummaryAnalyzer extends Analyzer {
       "Executor CPU Time",
       s => s.executorCpuTime,
       "Total executor CPU time on main task thread (minutes)",
-      isTime = true),
+      isNanoTime = true),
     Metric(
       "Executor Runtime",
       s => s.executorRunTime,
@@ -106,7 +108,7 @@ object AppSummaryAnalyzer extends Analyzer {
 
     val calculatedMetrics = metrics.map { m =>
       val totalValue = stageData.map(m.value).sum(Numeric.LongIsIntegral)
-      val formattedValue = FormatUtils.formatValue(totalValue, m.isTime, m.isSize, m.isRecords)
+      val formattedValue = FormatUtils.formatValue(totalValue, m.isTime, m.isNanoTime, m.isSize, m.isRecords)
       Seq(m.name, formattedValue, m.description)
     }
 
