@@ -1,4 +1,3 @@
-
 package org.apache.spark.insight.analyzer
 
 import org.apache.spark.insight.fetcher.SparkApplicationData
@@ -100,9 +99,14 @@ class AutoScalingAnalyzerSuite extends AnyFunSuite {
       )
     )
 
+    val appConf = Map(
+      "spark.dynamicAllocation.initialExecutors" -> "1",
+      "spark.dynamicAllocation.maxExecutors" -> "10"
+    )
+
     val sparkAppData = SparkApplicationData(
       appId = "app-id",
-      appConf = Map(),
+      appConf = appConf,
       appInfo = appInfo,
       jobData = Seq(),
       stageData = stageData,
@@ -115,8 +119,10 @@ class AutoScalingAnalyzerSuite extends AnyFunSuite {
     assert(analysisResult.name === s"Auto-Scaling Analysis for ${appInfo.id}")
     assert(analysisResult.rows.size === 2)
     assert(analysisResult.rows(0)(0) === "Initial Executors")
-    assert(analysisResult.rows(0)(1) === "0")
+    assert(analysisResult.rows(0)(1) === "1")
+    assert(analysisResult.rows(0)(2) === "0")
     assert(analysisResult.rows(1)(0) === "Max Executors")
-    assert(analysisResult.rows(1)(1) === "2")
+    assert(analysisResult.rows(1)(1) === "10")
+    assert(analysisResult.rows(1)(2) === "2")
   }
 }

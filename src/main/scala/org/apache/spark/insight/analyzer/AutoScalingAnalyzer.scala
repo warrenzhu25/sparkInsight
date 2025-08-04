@@ -1,3 +1,4 @@
+
 package org.apache.spark.insight.analyzer
 
 import org.apache.spark.insight.fetcher.SparkApplicationData
@@ -13,6 +14,7 @@ object AutoScalingAnalyzer extends Analyzer {
 
   override def analysis(sparkAppData: SparkApplicationData): AnalysisResult = {
     val stageData = sparkAppData.stageData
+    val appConf = sparkAppData.appConf
     val appStartTime = sparkAppData.appInfo.attempts.head.startTime
     val time = new Date(appStartTime.getTime + 1000 * 60 * 2)
 
@@ -40,10 +42,13 @@ object AutoScalingAnalyzer extends Analyzer {
       maxExecutors = Math.max(maxExecutors, currentMaxExecutors)
     }
 
-    val headers = Seq("Configuration", "Value", "Description")
+    val currentInitialExecutors = appConf.getOrElse("spark.dynamicAllocation.initialExecutors", "N/A")
+    val currentMaxExecutorsConf = appConf.getOrElse("spark.dynamicAllocation.maxExecutors", "N/A")
+
+    val headers = Seq("Configuration", "Current", "Suggested", "Description")
     val rows = Seq(
-      Seq("Initial Executors", initialExecutors.toString, "Recommended number of initial executors to provision."),
-      Seq("Max Executors", maxExecutors.toString, "Recommended maximum number of executors for auto-scaling.")
+      Seq("Initial Executors", currentInitialExecutors, initialExecutors.toString, "Recommended number of initial executors to provision."),
+      Seq("Max Executors", currentMaxExecutorsConf, maxExecutors.toString, "Recommended maximum number of executors for auto-scaling.")
     )
 
     AnalysisResult(
