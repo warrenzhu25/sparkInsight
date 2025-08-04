@@ -103,7 +103,7 @@ object AppDiffAnalyzer extends Analyzer {
         )
       }
 
-    val headers = Seq("Metric", s"App1 (${data1.appInfo.id})", s"App2 (${data2.appInfo.id})", "Diff", "Metric Description")
+    val headers = Seq("Metric", "App1", "App2", "Diff", "Metric Description")
     val categoryHeader = Seq("", "", "", "", "")
     val allMetrics = Seq(
       Seq("Time", "", "", "", ""),

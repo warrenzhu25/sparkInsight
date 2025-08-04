@@ -1,3 +1,4 @@
+
 package org.apache.spark.insight.analyzer
 
 import org.apache.spark.insight.fetcher.SparkApplicationData
@@ -96,7 +97,7 @@ class AppDiffAnalyzerSuite extends AnyFunSuite {
 
     val result = AppDiffAnalyzer.analysis(appData1, appData2)
     assert(result.name == s"Spark Application Diff Report for ${appData1.appInfo.id} and ${appData2.appInfo.id}")
-    assert(result.header == Seq("Metric", s"App1 (${appData1.appInfo.id})", s"App2 (${appData2.appInfo.id})", "Diff", "Metric Description"))
+    assert(result.header == Seq("Metric", "App1", "App2", "Diff", "Metric Description"))
     assert(result.rows.nonEmpty)
   }
 }
