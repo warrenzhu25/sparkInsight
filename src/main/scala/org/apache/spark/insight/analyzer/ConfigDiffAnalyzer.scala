@@ -1,3 +1,4 @@
+
 package org.apache.spark.insight.analyzer
 
 import org.apache.spark.insight.fetcher.SparkApplicationData
@@ -7,18 +8,16 @@ import org.apache.spark.insight.fetcher.SparkApplicationData
  */
 object ConfigDiffAnalyzer extends Analyzer {
 
-  private val USEFUL_CONFIG_PREFIXES = Set(
-    "spark.executor",
-    "spark.driver",
-    "spark.sql",
-    "spark.memory",
-    "spark.storage",
-    "spark.shuffle",
-    "spark.network",
-    "spark.ui",
-    "spark.dynamicAllocation",
-    "spark.serializer",
-    "spark.kryo"
+  private val CATEGORIZED_PREFIXES = Map(
+    "Scheduling" -> Set("spark.scheduler", "spark.speculation"),
+    "Memory Management" -> Set("spark.memory", "spark.storage"),
+    "Shuffle Behavior" -> Set("spark.shuffle"),
+    "Execution" -> Set("spark.executor", "spark.driver", "spark.task"),
+    "SQL" -> Set("spark.sql"),
+    "Network" -> Set("spark.network"),
+    "UI" -> Set("spark.ui"),
+    "Dynamic Allocation" -> Set("spark.dynamicAllocation"),
+    "Serialization" -> Set("spark.serializer", "spark.kryo")
   )
 
   override def analysis(data1: SparkApplicationData, data2: SparkApplicationData): AnalysisResult = {
@@ -27,17 +26,25 @@ object ConfigDiffAnalyzer extends Analyzer {
 
     val allKeys = conf1.keySet ++ conf2.keySet
 
-    val rows = allKeys.toSeq.sorted.flatMap { key =>
+    val diffs = allKeys.toSeq.sorted.flatMap { key =>
       val value1 = conf1.get(key)
       val value2 = conf2.get(key)
 
-      val isUseful = USEFUL_CONFIG_PREFIXES.exists(prefix => key.startsWith(prefix))
-      val isNewOrRemoved = value1.isEmpty || value2.isEmpty
-
-      if (value1 != value2 && (isUseful || isNewOrRemoved)) {
-        Some(Seq(key, value1.getOrElse(""), value2.getOrElse("")))
+      if (value1 != value2) {
+        val category = CATEGORIZED_PREFIXES.find { case (_, prefixes) =>
+          prefixes.exists(prefix => key.startsWith(prefix))
+        }.map(_._1).getOrElse("Other")
+        Some((category, key, value1.getOrElse(""), value2.getOrElse("")))
       } else {
         None
+      }
+    }
+
+    val groupedDiffs = diffs.groupBy(_._1).toSeq.sortBy(_._1)
+
+    val rows = groupedDiffs.flatMap { case (category, diffs) =>
+      Seq(Seq(s"[$category]", "", "")) ++ diffs.map { case (_, key, v1, v2) =>
+        Seq(key, v1, v2)
       }
     }
 

@@ -1,4 +1,3 @@
-
 package org.apache.spark.insight.analyzer
 
 import org.apache.spark.insight.fetcher.SparkApplicationData
@@ -50,9 +49,11 @@ class ConfigDiffAnalyzerSuite extends AnyFunSuite {
     val result = ConfigDiffAnalyzer.analysis(appData1, appData2)
 
     assert(result.name === s"Configuration Diff Report for ${appData1.appInfo.id} and ${appData2.appInfo.id}")
-    assert(result.rows.size === 3)
-    assert(result.rows(0) === Seq("spark.driver.memory", "2g", "3g"))
-    assert(result.rows(1) === Seq("spark.executor.cores", "2", "4"))
-    assert(result.rows(2) === Seq("spark.new.config", "", "true"))
+    assert(result.rows.size === 5)
+    assert(result.rows(0) === Seq("[Execution]", "", ""))
+    assert(result.rows(1) === Seq("spark.driver.memory", "2g", "3g"))
+    assert(result.rows(2) === Seq("spark.executor.cores", "2", "4"))
+    assert(result.rows(3) === Seq("[Other]", "", ""))
+    assert(result.rows(4) === Seq("spark.new.config", "", "true"))
   }
 }
