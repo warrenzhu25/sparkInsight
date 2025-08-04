@@ -1,7 +1,7 @@
-
 package org.apache.spark.insight.analyzer
 
 import org.apache.spark.insight.fetcher.SparkApplicationData
+import org.apache.spark.insight.util.CliChart
 
 import java.util.concurrent.TimeUnit
 
@@ -16,25 +16,31 @@ object ExecutorAnalyzer extends Analyzer {
     val endTime = appInfo.attempts.head.endTime.getTime
     val executorSummaries = sparkAppData.executorSummaries
 
-    val minuteIntervals = (startTime to endTime by TimeUnit.MINUTES.toMillis(1)).map { millis =>
-      (TimeUnit.MILLISECONDS.toMinutes(millis - startTime), millis)
+    val minuteIntervals = (startTime to endTime by TimeUnit.MINUTES.toMillis(1)).map {
+      millis =>
+        (TimeUnit.MILLISECONDS.toMinutes(millis - startTime), millis)
     }
 
-    val rows = minuteIntervals.map { case (minute, intervalTime) =>
-      val runningExecutors = executorSummaries.count { exec =>
-        val addTime = exec.addTime.getTime
-        val removeTime = exec.removeTime.map(_.getTime).getOrElse(endTime + 1)
-        addTime <= intervalTime && intervalTime < removeTime
-      }
-      Seq(minute.toString, runningExecutors.toString)
+    val data = minuteIntervals.map {
+      case (minute, intervalTime) =>
+        val runningExecutors = executorSummaries.count {
+          exec =>
+            val addTime = exec.addTime.getTime
+            val removeTime = exec.removeTime.map(_.getTime).getOrElse(endTime + 1)
+            addTime <= intervalTime && intervalTime < removeTime
+        }
+        (minute.toString, runningExecutors)
     }
+
+    val rows = data.map { case (minute, count) => Seq(minute, count.toString) }
+    val chart = CliChart.barChart(data)
 
     val headers = Seq("Time (minutes)", "Running Executors")
     AnalysisResult(
       s"Executor Analysis for ${appInfo.id}",
       headers,
       rows,
-      "Shows the number of running executors at one-minute intervals."
+      s"Shows the number of running executors at one-minute intervals.\n\n$chart"
     )
   }
 }
