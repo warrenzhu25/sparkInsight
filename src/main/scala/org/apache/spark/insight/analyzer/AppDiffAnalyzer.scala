@@ -1,6 +1,8 @@
+
 package org.apache.spark.insight.analyzer
 
 import org.apache.spark.insight.fetcher.SparkApplicationData
+import org.apache.spark.insight.util.FormatUtils
 import org.apache.spark.status.api.v1.StageData
 
 import java.util.concurrent.TimeUnit
@@ -44,9 +46,9 @@ object AppDiffAnalyzer extends Analyzer {
 
       Seq(
         metric.name,
-        formatValue(value1, metric.isTime, metric.isSize, metric.isRecords),
-        formatValue(value2, metric.isTime, metric.isSize, metric.isRecords),
-        s"${formatValue(diff, metric.isTime, metric.isSize, metric.isRecords)} ($diffPercentage)"
+        FormatUtils.formatValue(value1, metric.isTime, metric.isSize, metric.isRecords),
+        FormatUtils.formatValue(value2, metric.isTime, metric.isSize, metric.isRecords),
+        s"${FormatUtils.formatValue(diff, metric.isTime, metric.isSize, metric.isRecords)} ($diffPercentage)"
       )
     }
 
@@ -55,18 +57,6 @@ object AppDiffAnalyzer extends Analyzer {
       s"Spark Application Diff Report for ${data1.appInfo.id} and ${data2.appInfo.id}",
       headers,
       rows)
-  }
-
-  private def formatValue(value: Long, isTime: Boolean, isSize: Boolean, isRecords: Boolean): String = {
-    if (isTime) {
-      s"${TimeUnit.MILLISECONDS.toMinutes(value)}"
-    } else if (isSize) {
-      s"${value / (1024 * 1024 * 1024)}"
-    } else if (isRecords) {
-      s"${value / 1000}"
-    } else {
-      value.toString
-    }
   }
 
   override def analysis(data: SparkApplicationData): AnalysisResult = {

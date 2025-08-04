@@ -1,7 +1,7 @@
-
 package org.apache.spark.insight.analyzer
 
 import org.apache.spark.insight.fetcher.SparkApplicationData
+import org.apache.spark.insight.util.FormatUtils
 import org.apache.spark.status.api.v1.StageData
 
 import java.util.concurrent.TimeUnit
@@ -106,7 +106,7 @@ object AppSummaryAnalyzer extends Analyzer {
 
     val calculatedMetrics = metrics.map { m =>
       val totalValue = stageData.map(m.value).sum(Numeric.LongIsIntegral)
-      val formattedValue = formatValue(totalValue, m.isTime, m.isSize, m.isRecords)
+      val formattedValue = FormatUtils.formatValue(totalValue, m.isTime, m.isSize, m.isRecords)
       Seq(m.name, formattedValue, m.description)
     }
 
@@ -131,17 +131,5 @@ object AppSummaryAnalyzer extends Analyzer {
     val rows = allMetrics
 
     AnalysisResult(s"Spark Application Performance Report for applicationId: ${sparkAppData.appInfo.id}", headers, rows)
-  }
-
-  private def formatValue(value: Long, isTime: Boolean, isSize: Boolean, isRecords: Boolean): String = {
-    if (isTime) {
-      s"${TimeUnit.MILLISECONDS.toMinutes(value)}"
-    } else if (isSize) {
-      s"${value / (1024 * 1024 * 1024)}"
-    } else if (isRecords) {
-      s"${value / 1000}"
-    } else {
-      value.toString
-    }
   }
 }
