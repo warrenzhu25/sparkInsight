@@ -21,7 +21,7 @@ object WebServer {
   def main(args: Array[String]): Unit = {
     val server = EmberServerBuilder.default[IO]
       .withHost(host"localhost")
-      .withPort(port"8080")
+      .withPort(port"8081")
       .withHttpApp(routes.orNotFound)
       .build
       .use(_ => IO.never)

@@ -1,4 +1,3 @@
-
 package org.apache.spark.insight.analyzer
 
 import org.apache.spark.insight.fetcher.SparkApplicationData
@@ -7,7 +6,7 @@ import org.apache.spark.status.api.v1.StageData
 import java.util.concurrent.TimeUnit
 
 /**
- * An analyzer that generates a summary of the Spark application.
+ * An analyzer that generates a summary of Spark application.
  */
 object AppSummaryAnalyzer extends Analyzer {
 
@@ -28,12 +27,12 @@ object AppSummaryAnalyzer extends Analyzer {
     Metric(
       "Executor CPU Time",
       s => s.executorCpuTime,
-      "Total active CPU time spent by the executor running the main task thread (in minutes)",
+      "Total active CPU time spent by executor running main task thread (in minutes)",
       isTime = true),
     Metric(
       "Executor Runtime",
       s => s.executorRunTime,
-      "Total elapsed time spent by the executor running tasks (in minutes)",
+      "Total elapsed time spent by executor running tasks (in minutes)",
       isTime = true),
     Metric(
       "Input Records",
