@@ -1,3 +1,4 @@
+
 package org.apache.spark.insight.analyzer
 
 import org.apache.spark.insight.fetcher.SparkApplicationData
@@ -16,7 +17,7 @@ object StageLevelDiffAnalyzer extends Analyzer {
 
     val commonStageIds = stages1.keySet.intersect(stages2.keySet)
 
-    val rows = commonStageIds.map { id =>
+    val rows = commonStageIds.flatMap { id =>
       val stage1 = stages1(id)
       val stage2 = stages2(id)
 
@@ -26,18 +27,22 @@ object StageLevelDiffAnalyzer extends Analyzer {
       val shuffleReadDiff = stage2.shuffleReadBytes - stage1.shuffleReadBytes
       val shuffleWriteDiff = stage2.shuffleWriteBytes - stage1.shuffleWriteBytes
 
-      (
-        durationDiff,
-        Seq(
-          id.toString,
-          stage1.name,
-          s"${TimeUnit.MILLISECONDS.toSeconds(durationDiff)}s",
-          s"${inputDiff / (1024 * 1024)}MB",
-          s"${outputDiff / (1024 * 1024)}MB",
-          s"${shuffleReadDiff / (1024 * 1024)}MB",
-          s"${shuffleWriteDiff / (1024 * 1024)}MB"
-        )
-      )
+      if (durationDiff == 0 && inputDiff == 0 && outputDiff == 0 && shuffleReadDiff == 0 && shuffleWriteDiff == 0) {
+        None
+      } else {
+        Some((
+          durationDiff,
+          Seq(
+            id.toString,
+            stage1.name,
+            s"${TimeUnit.MILLISECONDS.toSeconds(durationDiff)}s",
+            s"${inputDiff / (1024 * 1024)}MB",
+            s"${outputDiff / (1024 * 1024)}MB",
+            s"${shuffleReadDiff / (1024 * 1024)}MB",
+            s"${shuffleWriteDiff / (1024 * 1024)}MB"
+          )
+        ))
+      }
     }.toSeq.sortBy(_._1.abs).reverse.map(_._2)
 
     AnalysisResult(
