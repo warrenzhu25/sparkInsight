@@ -49,7 +49,7 @@ object ExecutorDiffAnalyzer extends Analyzer {
         (TimeUnit.MILLISECONDS.toMinutes(millis - startTime), millis)
     }
 
-    minuteIntervals.map {
+    val data = minuteIntervals.map {
       case (minute, intervalTime) =>
         val runningExecutors = executorSummaries.count {
           exec =>
@@ -57,8 +57,27 @@ object ExecutorDiffAnalyzer extends Analyzer {
             val removeTime = exec.removeTime.map(_.getTime).getOrElse(endTime + 1)
             addTime <= intervalTime && intervalTime < removeTime
         }
-        Seq(minute.toString, runningExecutors.toString)
+        (minute, runningExecutors)
     }
+
+    val mergedRows = new ListBuffer[Seq[String]]()
+    if (data.nonEmpty) {
+      var startMinute = data.head._1
+      var currentCount = data.head._2
+      for (i <- 1 until data.length) {
+        val (minute, count) = data(i)
+        if (count != currentCount) {
+          val timeRange = if (startMinute == minute - 1) startMinute.toString else s"$startMinute-${minute - 1}"
+          mergedRows += Seq(timeRange, currentCount.toString)
+          startMinute = minute
+          currentCount = count
+        }
+      }
+      val lastMinute = data.last._1
+      val timeRange = if (startMinute == lastMinute) lastMinute.toString else s"$startMinute-$lastMinute"
+      mergedRows += Seq(timeRange, currentCount.toString)
+    }
+    mergedRows.toSeq
   }
 
   override def analysis(data: SparkApplicationData): AnalysisResult = {

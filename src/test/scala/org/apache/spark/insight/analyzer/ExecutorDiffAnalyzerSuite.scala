@@ -134,11 +134,9 @@ class ExecutorDiffAnalyzerSuite extends AnyFunSuite {
     val result = ExecutorDiffAnalyzer.analysis(appData1, appData2)
 
     assert(result.name === s"Executor Diff Report for ${appData1.appInfo.id} and ${appData2.appInfo.id}")
-    assert(result.rows.size === 4)
-    assert(result.rows(0) === Seq("0", "1", "0", "1"))
-    assert(result.rows(1) === Seq("1", "1", "1", "1"))
-    assert(result.rows(2) === Seq("2", "0", "2", "1"))
-    assert(result.rows(3) === Seq("3", "0", "3", "0"))
+    assert(result.rows.size === 2)
+    assert(result.rows(0) === Seq("0-1", "1", "0-2", "1"))
+    assert(result.rows(1) === Seq("2-3", "0", "3", "0"))
   }
 
   test("ExecutorDiffAnalyzer should handle applications with no attempts") {
@@ -218,11 +216,9 @@ class ExecutorDiffAnalyzerSuite extends AnyFunSuite {
     val result = ExecutorDiffAnalyzer.analysis(appData1, appData2)
 
     assert(result.name === s"Executor Diff Report for ${appData1.appInfo.id} and ${appData2.appInfo.id}")
-    assert(result.rows.size === 4)
-    assert(result.rows(0) === Seq("0", "1", "", ""))
-    assert(result.rows(1) === Seq("1", "1", "", ""))
-    assert(result.rows(2) === Seq("2", "0", "", ""))
-    assert(result.rows(3) === Seq("3", "0", "", ""))
+    assert(result.rows.size === 2)
+    assert(result.rows(0) === Seq("0-1", "1", "", ""))
+    assert(result.rows(1) === Seq("2-3", "0", "", ""))
   }
 
   test("ExecutorDiffAnalyzer should handle running applications") {
