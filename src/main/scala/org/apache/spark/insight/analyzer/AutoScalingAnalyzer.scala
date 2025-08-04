@@ -1,4 +1,3 @@
-
 package org.apache.spark.insight.analyzer
 
 import org.apache.spark.insight.fetcher.SparkApplicationData
@@ -51,11 +50,19 @@ object AutoScalingAnalyzer extends Analyzer {
       Seq("Max Executors", currentMaxExecutorsConf, maxExecutors.toString, "Recommended maximum number of executors for auto-scaling.")
     )
 
+    val description = """
+Provides recommendations for auto-scaling configuration based on application workload.
+The suggested values are calculated as follows:
+- Initial Executors: Based on the stages running in the first 2 minutes of the application.
+- Max Executors: Based on the maximum number of concurrent stages running throughout the application.
+The calculation aims to complete each stage in 2 minutes.
+"""
+
     AnalysisResult(
       s"Auto-Scaling Analysis for ${sparkAppData.appInfo.id}",
       headers,
       rows,
-      "Provides recommendations for auto-scaling configuration based on application workload."
+      description
     )
   }
 }
