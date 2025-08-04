@@ -1,9 +1,8 @@
-
 package org.apache.spark.insight.analyzer
 
 import org.apache.spark.insight.fetcher.SparkApplicationData
 import org.apache.spark.insight.util.FormatUtils
-import org.apache.spark.status.api.v1.StageData
+import org.apache.spark.status.api.v1.{StageData, StageStatus}
 
 import java.util.concurrent.TimeUnit
 
@@ -103,6 +102,10 @@ object AppSummaryAnalyzer extends Analyzer {
       removeTime - exec.addTime.getTime
     }.sum
 
+    val (successfulStages, failedStages) = stageData.partition(_.status == StageStatus.COMPLETE)
+    val successfulExecutorRuntime = successfulStages.map(_.executorRunTime).sum
+    val failedExecutorRuntime = failedStages.map(_.executorRunTime).sum
+
     val calculatedMetrics = metrics.map { m =>
       val totalValue = stageData.map(m.value).sum(Numeric.LongIsIntegral)
       val formattedValue = FormatUtils.formatValue(totalValue, m.isTime, m.isNanoTime, m.isSize, m.isRecords)
@@ -118,6 +121,14 @@ object AppSummaryAnalyzer extends Analyzer {
         "Total Executor Time",
         s"${TimeUnit.MILLISECONDS.toMinutes(totalExecutorTime)}",
         "Total time across all executors (minutes)"),
+      Seq(
+        "Successful Executor Runtime",
+        s"${TimeUnit.MILLISECONDS.toMinutes(successfulExecutorRuntime)}",
+        "Total executor running time for successful stages (minutes)"),
+      Seq(
+        "Failed Executor Runtime",
+        s"${TimeUnit.MILLISECONDS.toMinutes(failedExecutorRuntime)}",
+        "Total executor running time for failed stages (minutes)"),
       Seq(
         "Executor Runtime w/o Shuffle",
         s"${TimeUnit.MILLISECONDS.toMinutes(executorRuntimeWithoutShuffle)}",

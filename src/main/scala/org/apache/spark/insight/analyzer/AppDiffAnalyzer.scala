@@ -1,9 +1,8 @@
-
 package org.apache.spark.insight.analyzer
 
 import org.apache.spark.insight.fetcher.SparkApplicationData
 import org.apache.spark.insight.util.FormatUtils
-import org.apache.spark.status.api.v1.StageData
+import org.apache.spark.status.api.v1.{StageData, StageStatus}
 
 import java.util.concurrent.TimeUnit
 
@@ -37,6 +36,9 @@ object AppDiffAnalyzer extends Analyzer {
       removeTime - exec.addTime.getTime
     }.sum
     val totalRuntime1 = data1.appInfo.attempts.head.duration
+    val (successfulStages1, failedStages1) = data1.stageData.partition(_.status == StageStatus.COMPLETE)
+    val successfulExecutorRuntime1 = successfulStages1.map(_.executorRunTime).sum
+    val failedExecutorRuntime1 = failedStages1.map(_.executorRunTime).sum
 
     val appEndTime2 = data2.appInfo.attempts.head.endTime.getTime
     val totalExecutorTime2 = data2.executorSummaries.map { exec =>
@@ -44,6 +46,9 @@ object AppDiffAnalyzer extends Analyzer {
       removeTime - exec.addTime.getTime
     }.sum
     val totalRuntime2 = data2.appInfo.attempts.head.duration
+    val (successfulStages2, failedStages2) = data2.stageData.partition(_.status == StageStatus.COMPLETE)
+    val successfulExecutorRuntime2 = successfulStages2.map(_.executorRunTime).sum
+    val failedExecutorRuntime2 = failedStages2.map(_.executorRunTime).sum
 
     val rows = metrics.flatMap { metric =>
       val value1 = data1.stageData.map(metric.value).sum(Numeric.LongIsIntegral)
@@ -68,6 +73,10 @@ object AppDiffAnalyzer extends Analyzer {
     val totalExecutorTimeDiffPercentage = if (totalExecutorTime1 == 0) "N/A" else f"${(totalExecutorTimeDiff * 100.0 / totalExecutorTime1)}%.2f%%"
     val totalRuntimeDiff = totalRuntime2 - totalRuntime1
     val totalRuntimeDiffPercentage = if (totalRuntime1 == 0) "N/A" else f"${(totalRuntimeDiff * 100.0 / totalRuntime1)}%.2f%%"
+    val successfulExecutorRuntimeDiff = successfulExecutorRuntime2 - successfulExecutorRuntime1
+    val successfulExecutorRuntimeDiffPercentage = if (successfulExecutorRuntime1 == 0) "N/A" else f"${(successfulExecutorRuntimeDiff * 100.0 / successfulExecutorRuntime1)}%.2f%%"
+    val failedExecutorRuntimeDiff = failedExecutorRuntime2 - failedExecutorRuntime1
+    val failedExecutorRuntimeDiffPercentage = if (failedExecutorRuntime1 == 0) "N/A" else f"${(failedExecutorRuntimeDiff * 100.0 / failedExecutorRuntime1)}%.2f%%"
 
     val derivedRows = Seq(
       Seq(
@@ -76,6 +85,20 @@ object AppDiffAnalyzer extends Analyzer {
         s"${TimeUnit.MILLISECONDS.toMinutes(totalExecutorTime2)}",
         s"$totalExecutorTimeDiffPercentage",
         "Total time across all executors (minutes)"
+      ),
+      Seq(
+        "Successful Executor Runtime",
+        s"${TimeUnit.MILLISECONDS.toMinutes(successfulExecutorRuntime1)}",
+        s"${TimeUnit.MILLISECONDS.toMinutes(successfulExecutorRuntime2)}",
+        s"$successfulExecutorRuntimeDiffPercentage",
+        "Total executor running time for successful stages (minutes)"
+      ),
+      Seq(
+        "Failed Executor Runtime",
+        s"${TimeUnit.MILLISECONDS.toMinutes(failedExecutorRuntime1)}",
+        s"${TimeUnit.MILLISECONDS.toMinutes(failedExecutorRuntime2)}",
+        s"$failedExecutorRuntimeDiffPercentage",
+        "Total executor running time for failed stages (minutes)"
       ),
       Seq(
         "Total Runtime",
