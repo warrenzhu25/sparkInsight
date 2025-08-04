@@ -194,7 +194,7 @@ object SparkRestClient {
 
   def get[T](webTarget: WebTarget, converter: String => T): T =
     try {
-      println(s"Fetching URL: ${webTarget.getUri}")
+      logger.debug(s"Fetching URL: ${webTarget.getUri}")
       converter(webTarget.request(MediaType.APPLICATION_JSON).get(classOf[String]))
     } catch {
       case NonFatal(e) =>
