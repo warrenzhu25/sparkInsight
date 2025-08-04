@@ -12,21 +12,24 @@ import java.util.concurrent.TimeUnit
 object AppDiffAnalyzer extends Analyzer {
 
   private val metrics = Seq(
-    Metric("Disk Spill Size", s => s.diskBytesSpilled, "Total data spilled to disk (GB)", isSize = true),
+    // Time
     Metric("Executor CPU Time", s => s.executorCpuTime, "Total executor CPU time on main task thread (minutes)", isNanoTime = true),
     Metric("Executor Runtime", s => s.executorRunTime, "Total executor running time (minutes)", isTime = true),
-    Metric("Input Records", s => s.inputRecords, "Total records consumed by tasks (thousands)", isRecords = true),
-    Metric("Input Size", s => s.inputBytes, "Total input data consumed by tasks (GB)", isSize = true),
     Metric("JVM GC Time", s => s.jvmGcTime, "Total JVM garbage collection time (minutes)", isTime = true),
-    Metric("Memory Spill Size", s => s.memoryBytesSpilled, "Total data spilled to memory (GB)", isSize = true),
-    Metric("Output Records", s => s.outputRecords, "Total records produced by tasks (thousands)", isRecords = true),
-    Metric("Output Size", s => s.outputBytes, "Total output data produced by tasks (GB)", isSize = true),
-    Metric("Shuffle Read Records", s => s.shuffleReadRecords, "Total shuffle records consumed by tasks (thousands)", isRecords = true),
-    Metric("Shuffle Read Size", s => s.shuffleReadBytes, "Total shuffle data consumed by tasks (GB)", isSize = true),
     Metric("Shuffle Read Wait Time", s => s.shuffleFetchWaitTime, "Total task time blocked waiting for remote shuffle data (minutes)", isTime = true),
-    Metric("Shuffle Write Records", s => s.shuffleWriteRecords, "Total shuffle records produced by tasks (thousands)", isRecords = true),
+    Metric("Shuffle Write Time", s => s.shuffleWriteTime, "Total shuffle write time spent by tasks (minutes)", isTime = true),
+    // Size
+    Metric("Disk Spill Size", s => s.diskBytesSpilled, "Total data spilled to disk (GB)", isSize = true),
+    Metric("Memory Spill Size", s => s.memoryBytesSpilled, "Total data spilled to memory (GB)", isSize = true),
+    Metric("Input Size", s => s.inputBytes, "Total input data consumed by tasks (GB)", isSize = true),
+    Metric("Output Size", s => s.outputBytes, "Total output data produced by tasks (GB)", isSize = true),
+    Metric("Shuffle Read Size", s => s.shuffleReadBytes, "Total shuffle data consumed by tasks (GB)", isSize = true),
     Metric("Shuffle Write Size", s => s.shuffleWriteBytes, "Total shuffle data produced by tasks (GB)", isSize = true),
-    Metric("Shuffle Write Time", s => s.shuffleWriteTime, "Total shuffle write time spent by tasks (minutes)", isTime = true)
+    // Records
+    Metric("Input Records", s => s.inputRecords, "Total records consumed by tasks (thousands)", isRecords = true),
+    Metric("Output Records", s => s.outputRecords, "Total records produced by tasks (thousands)", isRecords = true),
+    Metric("Shuffle Read Records", s => s.shuffleReadRecords, "Total shuffle records consumed by tasks (thousands)", isRecords = true),
+    Metric("Shuffle Write Records", s => s.shuffleWriteRecords, "Total shuffle records produced by tasks (thousands)", isRecords = true)
   )
 
   override def analysis(data1: SparkApplicationData, data2: SparkApplicationData): AnalysisResult = {
@@ -110,10 +113,25 @@ object AppDiffAnalyzer extends Analyzer {
     )
 
     val headers = Seq("Metric", "App1", "App2", "Diff", "Metric Description")
+    val categoryHeader = Seq("", "", "", "", "")
+    val allMetrics = Seq(
+      Seq("Duration", "", "", "", ""),
+      categoryHeader
+    ) ++ derivedRows ++ Seq(
+      Seq("Executor", "", "", "", ""),
+      categoryHeader
+    ) ++ rows.filter(r => r.head.contains("Executor") || r.head.contains("JVM")) ++ Seq(
+      Seq("I/O", "", "", "", ""),
+      categoryHeader
+    ) ++ rows.filter(r => r.head.contains("Input") || r.head.contains("Output")) ++ Seq(
+      Seq("Shuffle", "", "", "", ""),
+      categoryHeader
+    ) ++ rows.filter(r => r.head.contains("Shuffle") || r.head.contains("Spill"))
+
     AnalysisResult(
       s"Spark Application Diff Report for ${data1.appInfo.id} and ${data2.appInfo.id}",
       headers,
-      rows ++ derivedRows)
+      allMetrics)
   }
 
   override def analysis(data: SparkApplicationData): AnalysisResult = {

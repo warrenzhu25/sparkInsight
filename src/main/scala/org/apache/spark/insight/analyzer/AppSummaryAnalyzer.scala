@@ -11,84 +11,6 @@ import java.util.concurrent.TimeUnit
  */
 object AppSummaryAnalyzer extends Analyzer {
 
-  private val metrics = Seq(
-    Metric(
-      "Disk Spill Size",
-      s => s.diskBytesSpilled,
-      "Total data spilled to disk (GB)",
-      isSize = true),
-    Metric(
-      "Executor CPU Time",
-      s => s.executorCpuTime,
-      "Total executor CPU time on main task thread (minutes)",
-      isNanoTime = true),
-    Metric(
-      "Executor Runtime",
-      s => s.executorRunTime,
-      "Total executor running time (minutes)",
-      isTime = true),
-    Metric(
-      "Input Records",
-      s => s.inputRecords,
-      "Total records consumed by tasks (thousands)",
-      isRecords = true),
-    Metric(
-      "Input Size",
-      s => s.inputBytes,
-      "Total input data consumed by tasks (GB)",
-      isSize = true),
-    Metric(
-      "JVM GC Time",
-      s => s.jvmGcTime,
-      "Total JVM garbage collection time (minutes)",
-      isTime = true),
-    Metric(
-      "Memory Spill Size",
-      s => s.memoryBytesSpilled,
-      "Total data spilled to memory (GB)",
-      isSize = true),
-    Metric(
-      "Output Records",
-      s => s.outputRecords,
-      "Total records produced by tasks (thousands)",
-      isRecords = true),
-    Metric(
-      "Output Size",
-      s => s.outputBytes,
-      "Total output data produced by tasks (GB)",
-      isSize = true),
-    Metric(
-      "Shuffle Read Records",
-      s => s.shuffleReadRecords,
-      "Total shuffle records consumed by tasks (thousands)",
-      isRecords = true),
-    Metric(
-      "Shuffle Read Size",
-      s => s.shuffleReadBytes,
-      "Total shuffle data consumed by tasks (GB)",
-      isSize = true),
-    Metric(
-      "Shuffle Read Wait Time",
-      s => s.shuffleFetchWaitTime,
-      "Total task time blocked waiting for remote shuffle data (minutes)",
-      isTime = true),
-    Metric(
-      "Shuffle Write Records",
-      s => s.shuffleWriteRecords,
-      "Total shuffle records produced by tasks (thousands)",
-      isRecords = true),
-    Metric(
-      "Shuffle Write Size",
-      s => s.shuffleWriteBytes,
-      "Total shuffle data produced by tasks (GB)",
-      isSize = true),
-    Metric(
-      "Shuffle Write Time",
-      s => s.shuffleWriteTime,
-      "Total shuffle write time spent by tasks (minutes)",
-      isTime = true)
-  )
-
   override def analysis(sparkAppData: SparkApplicationData): AnalysisResult = {
     val stageData = sparkAppData.stageData
     val appInfo = sparkAppData.appInfo
@@ -106,44 +28,59 @@ object AppSummaryAnalyzer extends Analyzer {
     val successfulExecutorRuntime = successfulStages.map(_.executorRunTime).sum
     val failedExecutorRuntime = failedStages.map(_.executorRunTime).sum
 
-    val calculatedMetrics = metrics.map { m =>
-      val totalValue = stageData.map(m.value).sum(Numeric.LongIsIntegral)
-      val formattedValue = FormatUtils.formatValue(totalValue, m.isTime, m.isNanoTime, m.isSize, m.isRecords)
-      Seq(m.name, formattedValue, m.description)
+    def getMetricValue(value: StageData => Long, isTime: Boolean = false, isNanoTime: Boolean = false, isSize: Boolean = false, isRecords: Boolean = false): String = {
+      val totalValue = stageData.map(value).sum(Numeric.LongIsIntegral)
+      FormatUtils.formatValue(totalValue, isTime, isNanoTime, isSize, isRecords)
     }
 
-    val derivedMetrics = Seq(
-      Seq(
-        "Total Runtime",
-        s"${TimeUnit.MILLISECONDS.toMinutes(totalRuntime)}",
-        "Total elapsed running time (minutes)"),
-      Seq(
-        "Total Executor Time",
-        s"${TimeUnit.MILLISECONDS.toMinutes(totalExecutorTime)}",
-        "Total time across all executors (minutes)"),
-      Seq(
-        "Successful Executor Runtime",
-        s"${TimeUnit.MILLISECONDS.toMinutes(successfulExecutorRuntime)}",
-        "Total executor running time for successful stages (minutes)"),
-      Seq(
-        "Failed Executor Runtime",
-        s"${TimeUnit.MILLISECONDS.toMinutes(failedExecutorRuntime)}",
-        "Total executor running time for failed stages (minutes)"),
-      Seq(
-        "Executor Runtime w/o Shuffle",
-        s"${TimeUnit.MILLISECONDS.toMinutes(executorRuntimeWithoutShuffle)}",
-        "Executor run time excluding shuffle time (minutes)"),
-      Seq(
-        "Net I/O Time",
-        s"${netIOTime / (1024 * 1024 * 1024)}",
-        "Total time accessing external storage (minutes)")
+    val durationMetrics = Seq(
+      Seq("Total Runtime", s"${TimeUnit.MILLISECONDS.toMinutes(totalRuntime)}", "Total elapsed running time (minutes)"),
+      Seq("Total Executor Time", s"${TimeUnit.MILLISECONDS.toMinutes(totalExecutorTime)}", "Total time across all executors (minutes)"),
+      Seq("Successful Executor Runtime", s"${TimeUnit.MILLISECONDS.toMinutes(successfulExecutorRuntime)}", "Total executor running time for successful stages (minutes)"),
+      Seq("Failed Executor Runtime", s"${TimeUnit.MILLISECONDS.toMinutes(failedExecutorRuntime)}", "Total executor running time for failed stages (minutes)"),
+      Seq("Executor Runtime w/o Shuffle", s"${TimeUnit.MILLISECONDS.toMinutes(executorRuntimeWithoutShuffle)}", "Executor run time excluding shuffle time (minutes)")
     )
 
-    val allMetrics = (calculatedMetrics ++ derivedMetrics).sortBy(_.head)
+    val executorMetrics = Seq(
+      Seq("Executor CPU Time", getMetricValue(_.executorCpuTime, isNanoTime = true), "Total executor CPU time on main task thread (minutes)"),
+      Seq("JVM GC Time", getMetricValue(_.jvmGcTime, isTime = true), "Total JVM garbage collection time (minutes)")
+    )
+
+    val ioMetrics = Seq(
+      Seq("Input Size", getMetricValue(_.inputBytes, isSize = true), "Total input data consumed by tasks (GB)"),
+      Seq("Output Size", getMetricValue(_.outputBytes, isSize = true), "Total output data produced by tasks (GB)"),
+      Seq("Input Records", getMetricValue(_.inputRecords, isRecords = true), "Total records consumed by tasks (thousands)"),
+      Seq("Output Records", getMetricValue(_.outputRecords, isRecords = true), "Total records produced by tasks (thousands)"),
+      Seq("Net I/O Time", s"${netIOTime / (1024 * 1024 * 1024)}", "Total time accessing external storage (minutes)")
+    )
+
+    val shuffleMetrics = Seq(
+      Seq("Shuffle Read Size", getMetricValue(_.shuffleReadBytes, isSize = true), "Total shuffle data consumed by tasks (GB)"),
+      Seq("Shuffle Write Size", getMetricValue(_.shuffleWriteBytes, isSize = true), "Total shuffle data produced by tasks (GB)"),
+      Seq("Shuffle Read Records", getMetricValue(_.shuffleReadRecords, isRecords = true), "Total shuffle records consumed by tasks (thousands)"),
+      Seq("Shuffle Write Records", getMetricValue(_.shuffleWriteRecords, isRecords = true), "Total shuffle records produced by tasks (thousands)"),
+      Seq("Shuffle Read Wait Time", getMetricValue(_.shuffleFetchWaitTime, isTime = true), "Total task time blocked waiting for remote shuffle data (minutes)"),
+      Seq("Shuffle Write Time", getMetricValue(_.shuffleWriteTime, isTime = true), "Total shuffle write time spent by tasks (minutes)"),
+      Seq("Disk Spill Size", getMetricValue(_.diskBytesSpilled, isSize = true), "Total data spilled to disk (GB)"),
+      Seq("Memory Spill Size", getMetricValue(_.memoryBytesSpilled, isSize = true), "Total data spilled to memory (GB)")
+    )
 
     val headers = Seq("Metric name", "Value", "Metric description")
-    val rows = allMetrics
+    val categoryHeader = Seq("", "", "")
+    val allMetrics = Seq(
+      Seq("Duration", "", ""),
+      categoryHeader
+    ) ++ durationMetrics ++ Seq(
+      Seq("Executor", "", ""),
+      categoryHeader
+    ) ++ executorMetrics ++ Seq(
+      Seq("I/O", "", ""),
+      categoryHeader
+    ) ++ ioMetrics ++ Seq(
+      Seq("Shuffle", "", ""),
+      categoryHeader
+    ) ++ shuffleMetrics
 
-    AnalysisResult(s"Spark Application Performance Report for applicationId: ${sparkAppData.appInfo.id}", headers, rows)
+    AnalysisResult(s"Spark Application Performance Report for applicationId: ${sparkAppData.appInfo.id}", headers, allMetrics)
   }
 }
