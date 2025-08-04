@@ -1,4 +1,3 @@
-
 package org.apache.spark.insight.analyzer
 
 import java.util.concurrent.TimeUnit
@@ -114,10 +113,9 @@ class ExecutorAnalyzerSuite extends AnyFunSuite {
     val analysisResult = ExecutorAnalyzer.analysis(sparkAppData)
 
     assert(analysisResult.name === s"Executor Analysis for ${appInfo.id}")
-    assert(analysisResult.rows.size === 4)
+    assert(analysisResult.rows.size === 3)
     assert(analysisResult.rows(0) === Seq("0", "1"))
     assert(analysisResult.rows(1) === Seq("1", "2"))
-    assert(analysisResult.rows(2) === Seq("2", "1"))
-    assert(analysisResult.rows(3) === Seq("3", "1"))
+    assert(analysisResult.rows(2) === Seq("2-3", "1"))
   }
 }

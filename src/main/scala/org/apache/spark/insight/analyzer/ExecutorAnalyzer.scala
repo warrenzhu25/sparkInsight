@@ -1,9 +1,10 @@
+
 package org.apache.spark.insight.analyzer
 
 import org.apache.spark.insight.fetcher.SparkApplicationData
-import org.apache.spark.insight.util.CliChart
 
 import java.util.concurrent.TimeUnit
+import scala.collection.mutable.ListBuffer
 
 /**
  * An analyzer that shows the number of running executors in one-minute intervals.
@@ -29,18 +30,33 @@ object ExecutorAnalyzer extends Analyzer {
             val removeTime = exec.removeTime.map(_.getTime).getOrElse(endTime + 1)
             addTime <= intervalTime && intervalTime < removeTime
         }
-        (minute.toString, runningExecutors)
+        (minute, runningExecutors)
     }
 
-    val rows = data.map { case (minute, count) => Seq(minute, count.toString) }
-    val chart = CliChart.barChart(data)
+    val mergedRows = new ListBuffer[Seq[String]]()
+    if (data.nonEmpty) {
+      var startMinute = data.head._1
+      var currentCount = data.head._2
+      for (i <- 1 until data.length) {
+        val (minute, count) = data(i)
+        if (count != currentCount) {
+          val timeRange = if (startMinute == minute - 1) startMinute.toString else s"$startMinute-${minute - 1}"
+          mergedRows += Seq(timeRange, currentCount.toString)
+          startMinute = minute
+          currentCount = count
+        }
+      }
+      val lastMinute = data.last._1
+      val timeRange = if (startMinute == lastMinute) startMinute.toString else s"$startMinute-$lastMinute"
+      mergedRows += Seq(timeRange, currentCount.toString)
+    }
 
     val headers = Seq("Time (minutes)", "Running Executors")
     AnalysisResult(
       s"Executor Analysis for ${appInfo.id}",
       headers,
-      rows,
-      s"Shows the number of running executors at one-minute intervals.\n\n$chart"
+      mergedRows.toSeq,
+      "Shows the number of running executors at one-minute intervals."
     )
   }
 }
