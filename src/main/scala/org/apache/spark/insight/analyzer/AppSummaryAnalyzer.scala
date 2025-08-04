@@ -1,3 +1,4 @@
+
 package org.apache.spark.insight.analyzer
 
 import org.apache.spark.insight.fetcher.SparkApplicationData
@@ -22,77 +23,77 @@ object AppSummaryAnalyzer extends Analyzer {
     Metric(
       "Disk Spill Size",
       s => s.diskBytesSpilled,
-      "Total data spilled to disk (in GB)",
+      "Total data spilled to disk (GB)",
       isSize = true),
     Metric(
       "Executor CPU Time",
       s => s.executorCpuTime,
-      "Total active CPU time spent by executor running main task thread (in minutes)",
+      "Total executor CPU time on main task thread (minutes)",
       isTime = true),
     Metric(
       "Executor Runtime",
       s => s.executorRunTime,
-      "Total elapsed time spent by executor running tasks (in minutes)",
+      "Total executor running time (minutes)",
       isTime = true),
     Metric(
       "Input Records",
       s => s.inputRecords,
-      "Total number of records consumed by tasks (in thousands)",
+      "Total records consumed by tasks (thousands)",
       isRecords = true),
     Metric(
       "Input Size",
       s => s.inputBytes,
-      "Total input data consumed by tasks (in GB)",
+      "Total input data consumed by tasks (GB)",
       isSize = true),
     Metric(
       "JVM GC Time",
       s => s.jvmGcTime,
-      "Total time JVM spent in garbage collection (in minutes)",
+      "Total JVM garbage collection time (minutes)",
       isTime = true),
     Metric(
       "Memory Spill Size",
       s => s.memoryBytesSpilled,
-      "Total data spilled to memory (in GB)",
+      "Total data spilled to memory (GB)",
       isSize = true),
     Metric(
       "Output Records",
       s => s.outputRecords,
-      "Total number of records produced by tasks (in thousands)",
+      "Total records produced by tasks (thousands)",
       isRecords = true),
     Metric(
       "Output Size",
       s => s.outputBytes,
-      "Total output data produced by tasks (in GB)",
+      "Total output data produced by tasks (GB)",
       isSize = true),
     Metric(
       "Shuffle Read Records",
       s => s.shuffleReadRecords,
-      "Total number of shuffle records consumed by tasks (in thousands)",
+      "Total shuffle records consumed by tasks (thousands)",
       isRecords = true),
     Metric(
       "Shuffle Read Size",
       s => s.shuffleReadBytes,
-      "Total shuffle data consumed by tasks (in GB)",
+      "Total shuffle data consumed by tasks (GB)",
       isSize = true),
     Metric(
       "Shuffle Read Wait Time",
       s => s.shuffleFetchWaitTime,
-      "Total time during which tasks were blocked waiting for remote shuffle data (in minutes)",
+      "Total task time blocked waiting for remote shuffle data (minutes)",
       isTime = true),
     Metric(
       "Shuffle Write Records",
       s => s.shuffleWriteRecords,
-      "Total number of shuffle records produced by tasks (in thousands)",
+      "Total shuffle records produced by tasks (thousands)",
       isRecords = true),
     Metric(
       "Shuffle Write Size",
       s => s.shuffleWriteBytes,
-      "Total shuffle data produced by tasks (in GB)",
+      "Total shuffle data produced by tasks (GB)",
       isSize = true),
     Metric(
       "Shuffle Write Time",
       s => s.shuffleWriteTime,
-      "Total Shuffle write time spent by tasks (in minutes)",
+      "Total shuffle write time spent by tasks (minutes)",
       isTime = true)
   )
 
@@ -113,15 +114,15 @@ object AppSummaryAnalyzer extends Analyzer {
       Seq(
         "Total Runtime",
         s"${TimeUnit.MILLISECONDS.toMinutes(totalRuntime)}",
-        "Total elapsed running time (in minutes)"),
+        "Total elapsed running time (minutes)"),
       Seq(
         "Executor Runtime w/o Shuffle",
         s"${TimeUnit.MILLISECONDS.toMinutes(executorRuntimeWithoutShuffle)}",
-        "Executor run time excluding shuffle time (in minutes)"),
+        "Executor run time excluding shuffle time (minutes)"),
       Seq(
         "Net I/O Time",
         s"${netIOTime / (1024 * 1024 * 1024)}",
-        "Total time spent accessing external storage (in minutes)")
+        "Total time accessing external storage (minutes)")
     )
 
     val allMetrics = (calculatedMetrics ++ derivedMetrics).sortBy(_.head)
