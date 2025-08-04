@@ -1,3 +1,4 @@
+
 package org.apache.spark.insight.analyzer
 
 import org.apache.spark.insight.fetcher.SparkApplicationData
@@ -44,19 +45,23 @@ object AppDiffAnalyzer extends Analyzer {
     }.sum
     val totalRuntime2 = data2.appInfo.attempts.head.duration
 
-    val rows = metrics.map { metric =>
+    val rows = metrics.flatMap { metric =>
       val value1 = data1.stageData.map(metric.value).sum(Numeric.LongIsIntegral)
       val value2 = data2.stageData.map(metric.value).sum(Numeric.LongIsIntegral)
-      val diff = value2 - value1
-      val diffPercentage = if (value1 == 0) "N/A" else f"${(diff * 100.0 / value1)}%.2f%%"
+      if (value1 == 0 && value2 == 0) {
+        None
+      } else {
+        val diff = value2 - value1
+        val diffPercentage = if (value1 == 0) "N/A" else f"${(diff * 100.0 / value1)}%.2f%%"
 
-      Seq(
-        metric.name,
-        FormatUtils.formatValue(value1, metric.isTime, metric.isNanoTime, metric.isSize, metric.isRecords),
-        FormatUtils.formatValue(value2, metric.isTime, metric.isNanoTime, metric.isSize, metric.isRecords),
-        s"$diffPercentage",
-        metric.description
-      )
+        Some(Seq(
+          metric.name,
+          FormatUtils.formatValue(value1, metric.isTime, metric.isNanoTime, metric.isSize, metric.isRecords),
+          FormatUtils.formatValue(value2, metric.isTime, metric.isNanoTime, metric.isSize, metric.isRecords),
+          s"$diffPercentage",
+          metric.description
+        ))
+      }
     }
 
     val totalExecutorTimeDiff = totalExecutorTime2 - totalExecutorTime1
