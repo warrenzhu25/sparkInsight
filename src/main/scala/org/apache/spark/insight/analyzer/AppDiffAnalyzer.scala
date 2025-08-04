@@ -40,7 +40,7 @@ object AppDiffAnalyzer extends Analyzer {
         metric.name,
         FormatUtils.formatValue(value1, metric.isTime, metric.isNanoTime, metric.isSize, metric.isRecords),
         FormatUtils.formatValue(value2, metric.isTime, metric.isNanoTime, metric.isSize, metric.isRecords),
-        s"${FormatUtils.formatValue(diff, metric.isTime, metric.isNanoTime, metric.isSize, metric.isRecords)} ($diffPercentage)",
+        s"$diffPercentage",
         metric.description
       )
     }
