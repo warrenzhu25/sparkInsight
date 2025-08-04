@@ -1,3 +1,4 @@
+
 package org.apache.spark.insight.analyzer
 
 import org.apache.spark.insight.fetcher.SparkApplicationData
@@ -24,7 +25,7 @@ object AppSummaryAnalyzer extends Analyzer {
       val removeTime = exec.removeTime.map(_.getTime).getOrElse(appEndTime)
       removeTime - exec.addTime.getTime
     }.sum
-    val executorCores = appInfo.coresPerExecutor.getOrElse(1)
+    val executorCores = sparkAppData.appConf.getOrElse("spark.executor.cores", "1").toInt
     val executorUtilization = if (totalExecutorTime == 0) 0.0 else (executorRuntime.toDouble / (totalExecutorTime * executorCores)) * 100
 
     val (successfulStages, failedStages) = stageData.partition(_.status == StageStatus.COMPLETE)

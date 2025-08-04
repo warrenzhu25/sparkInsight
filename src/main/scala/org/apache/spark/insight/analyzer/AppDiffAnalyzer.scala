@@ -1,3 +1,4 @@
+
 package org.apache.spark.insight.analyzer
 
 import org.apache.spark.insight.fetcher.SparkApplicationData
@@ -42,7 +43,7 @@ object AppDiffAnalyzer extends Analyzer {
     val (successfulStages1, failedStages1) = data1.stageData.partition(_.status == StageStatus.COMPLETE)
     val successfulExecutorRuntime1 = successfulStages1.map(_.executorRunTime).sum
     val failedExecutorRuntime1 = failedStages1.map(_.executorRunTime).sum
-    val executorCores1 = data1.appInfo.coresPerExecutor.getOrElse(1)
+    val executorCores1 = data1.appConf.getOrElse("spark.executor.cores", "1").toInt
     val executorUtilization1 = if (totalExecutorTime1 == 0) 0.0 else (data1.stageData.map(_.executorRunTime).sum.toDouble / (totalExecutorTime1 * executorCores1)) * 100
 
     val appEndTime2 = data2.appInfo.attempts.head.endTime.getTime
@@ -54,7 +55,7 @@ object AppDiffAnalyzer extends Analyzer {
     val (successfulStages2, failedStages2) = data2.stageData.partition(_.status == StageStatus.COMPLETE)
     val successfulExecutorRuntime2 = successfulStages2.map(_.executorRunTime).sum
     val failedExecutorRuntime2 = failedStages2.map(_.executorRunTime).sum
-    val executorCores2 = data2.appInfo.coresPerExecutor.getOrElse(1)
+    val executorCores2 = data2.appConf.getOrElse("spark.executor.cores", "1").toInt
     val executorUtilization2 = if (totalExecutorTime2 == 0) 0.0 else (data2.stageData.map(_.executorRunTime).sum.toDouble / (totalExecutorTime2 * executorCores2)) * 100
 
     val rows = metrics.flatMap { metric =>
