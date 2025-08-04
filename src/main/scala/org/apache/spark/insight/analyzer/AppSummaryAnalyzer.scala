@@ -1,4 +1,3 @@
-
 package org.apache.spark.insight.analyzer
 
 import org.apache.spark.insight.fetcher.SparkApplicationData
@@ -18,12 +17,15 @@ object AppSummaryAnalyzer extends Analyzer {
     val appEndTime = appInfo.attempts.head.endTime.getTime
     val totalRuntime = appInfo.attempts.head.duration
     val totalShuffleTime = stageData.map(_.shuffleFetchWaitTime).sum
-    val executorRuntimeWithoutShuffle = stageData.map(_.executorRunTime).sum - totalShuffleTime
+    val executorRuntime = stageData.map(_.executorRunTime).sum
+    val executorRuntimeWithoutShuffle = executorRuntime - totalShuffleTime
     val netIOTime = stageData.map(s => s.inputBytes + s.outputBytes).sum(Numeric.LongIsIntegral)
     val totalExecutorTime = sparkAppData.executorSummaries.map { exec =>
       val removeTime = exec.removeTime.map(_.getTime).getOrElse(appEndTime)
       removeTime - exec.addTime.getTime
     }.sum
+    val executorCores = appInfo.coresPerExecutor.getOrElse(1)
+    val executorUtilization = if (totalExecutorTime == 0) 0.0 else (executorRuntime.toDouble / (totalExecutorTime * executorCores)) * 100
 
     val (successfulStages, failedStages) = stageData.partition(_.status == StageStatus.COMPLETE)
     val successfulExecutorRuntime = successfulStages.map(_.executorRunTime).sum
@@ -41,7 +43,8 @@ object AppSummaryAnalyzer extends Analyzer {
       Seq("Failed Executor Runtime", s"${TimeUnit.MILLISECONDS.toMinutes(failedExecutorRuntime)}", "Total executor running time for failed stages (minutes)"),
       Seq("Executor Runtime w/o Shuffle", s"${TimeUnit.MILLISECONDS.toMinutes(executorRuntimeWithoutShuffle)}", "Executor run time excluding shuffle time (minutes)"),
       Seq("Executor CPU Time", getMetricValue(_.executorCpuTime, isNanoTime = true), "Total executor CPU time on main task thread (minutes)"),
-      Seq("JVM GC Time", getMetricValue(_.jvmGcTime, isTime = true), "Total JVM garbage collection time (minutes)")
+      Seq("JVM GC Time", getMetricValue(_.jvmGcTime, isTime = true), "Total JVM garbage collection time (minutes)"),
+      Seq("Executor Utilization", f"$executorUtilization%.2f%%", "Executor utilization percentage")
     )
 
     val ioMetrics = Seq(
