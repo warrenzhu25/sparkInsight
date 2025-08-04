@@ -22,15 +22,15 @@ object Tabulator {
     List()).mkString("\n")
 
   private def formatRow(row: Seq[Any], colSizes: Seq[Int]): String = {
-    val cells = 
+    val cells =
       for ((item, size) <- row.zip(colSizes))
         yield if (size == 0) "" else (" %-" + size + "s ").format(item)
-    cells.mkString("|","|","|")
+    cells.mkString("| ", " | ", " |")
   }
 
   private def rowSeparator(colSizes: Seq[Int]): String =
     colSizes.map {
       col =>
         "-" * (col + 3)
-    }.mkString("+","+","+")
+    }.mkString("+", "+", "+")
 }
