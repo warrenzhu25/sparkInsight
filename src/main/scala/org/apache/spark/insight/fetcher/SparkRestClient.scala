@@ -33,6 +33,28 @@ class SparkRestClient {
     get(target, fromJson[Seq[ApplicationInfo]])
   }
 
+  def listExecutors(trackingUrl: String): Seq[ExecutorSummary] = {
+    val (historyServerUri, appId) = spilt(trackingUrl)
+    val apiTarget = getApiTarget(historyServerUri)
+    val appTarget = apiTarget.path(s"applications/${appId}")
+    val lastAttemptId = getApplicationInfo(appTarget).attempts.maxBy {
+      _.startTime
+    }.attemptId
+    val attemptTarget = lastAttemptId.map(appTarget.path).getOrElse(appTarget)
+    getExecutorSummaries(attemptTarget)
+  }
+
+  def listActiveExecutors(trackingUrl: String): Seq[ExecutorSummary] = {
+    val (historyServerUri, appId) = spilt(trackingUrl)
+    val apiTarget = getApiTarget(historyServerUri)
+    val appTarget = apiTarget.path(s"applications/${appId}")
+    val lastAttemptId = getApplicationInfo(appTarget).attempts.maxBy {
+      _.startTime
+    }.attemptId
+    val attemptTarget = lastAttemptId.map(appTarget.path).getOrElse(appTarget)
+    getActiveExecutorSummaries(attemptTarget)
+  }
+
   def fetchData(trackingUrl: String)(
     implicit ec: ExecutionContext
   ): Future[SparkApplicationData] = {
@@ -76,7 +98,8 @@ class SparkRestClient {
   }
 
   private def readDataLocally(appId: String): Option[SparkApplicationData] = {
-    val path = s"""D:\\SparkInsight\\$appId.json"""
+    val userHome = System.getProperty("user.home")
+    val path = s"""$userHome/SparkInsight/$appId.json"""
 
     if (!Files.exists(Paths.get(path))) {
       return None
@@ -86,7 +109,12 @@ class SparkRestClient {
 
     try {
       logger.info(s"Reading data from $path")
-      Some(SCALA_OBJECT_MAPPER.readValue(bufferedSource.mkString, classOf[SparkApplicationData]))
+      val data = SCALA_OBJECT_MAPPER.readValue(bufferedSource.mkString, classOf[SparkApplicationData])
+      if (data.appInfo.attempts.head.completed) {
+        Some(data)
+      } else {
+        None
+      }
     } finally {
       bufferedSource.close()
     }
@@ -156,6 +184,11 @@ class SparkRestClient {
 
   private def getExecutorSummaries(attemptTarget: WebTarget): Seq[ExecutorSummary] = {
     val target = attemptTarget.path("allexecutors")
+    get(target, fromJson[Seq[ExecutorSummary]])
+  }
+
+  private def getActiveExecutorSummaries(attemptTarget: WebTarget): Seq[ExecutorSummary] = {
+    val target = attemptTarget.path("executors")
     get(target, fromJson[Seq[ExecutorSummary]])
   }
 

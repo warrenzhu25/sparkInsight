@@ -20,11 +20,20 @@ object SparkFetcher extends Fetcher {
   private val DEFAULT_TIMEOUT = Duration(1, HOURS)
 
   override def getRecentApplications(historyServerUri: String, appName: Option[String], limit: Int = 2): Seq[SparkApplicationData] = {
-    val apps = sparkRestClient.listApplications(historyServerUri)
-    val filteredApps = appName.map(name => apps.filter(_.name.contains(name))).getOrElse(apps)
-    val sortedApps = filteredApps.sortBy(_.attempts.head.startTime).reverse
+    val allApps = sparkRestClient.listApplications(historyServerUri)
+
+    // Filter out apps with no attempts, as they cannot be sorted or processed.
+    val appsWithAttempts = allApps.filter(_.attempts.nonEmpty)
+
+    val nameFilteredApps = appName
+      .map(name => appsWithAttempts.filter(_.name.contains(name)))
+      .getOrElse(appsWithAttempts)
+
+    val sortedApps = nameFilteredApps.sortBy(_.attempts.head.startTime).reverse
+
     println("Found applications:")
     sortedApps.foreach(app => println(s"  ${app.id}"))
+
     sortedApps.take(limit).map(app => fetchData(s"$historyServerUri/applications/${app.id}"))
   }
 
@@ -57,6 +66,12 @@ object SparkFetcher extends Fetcher {
 
   private def doFetchDataUsingRestClients(trackingUrl: String): Future[SparkApplicationData] =
     Future {
-      Await.result(sparkRestClient.fetchData(trackingUrl), DEFAULT_TIMEOUT)
+      val data = Await.result(sparkRestClient.fetchData(trackingUrl), DEFAULT_TIMEOUT)
+      if (data.appInfo.attempts.head.completed) {
+        data
+      } else {
+        val executors = sparkRestClient.listActiveExecutors(trackingUrl)
+        data.copy(executorSummaries = executors)
+      }
     }
 }
