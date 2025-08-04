@@ -90,7 +90,7 @@ object AppDiffAnalyzer extends Analyzer {
       ("Total Executor Time", totalExecutorTime1, totalExecutorTime2, totalExecutorTimeDiffPercentage, "Total time across all executors (minutes)"),
       ("Successful Executor Runtime", successfulExecutorRuntime1, successfulExecutorRuntime2, successfulExecutorRuntimeDiffPercentage, "Total executor running time for successful stages (minutes)"),
       ("Failed Executor Runtime", failedExecutorRuntime1, failedExecutorRuntime2, failedExecutorRuntimeDiffPercentage, "Total executor running time for failed stages (minutes)"),
-      ("Total Runtime", totalRuntime1, totalRuntime2, totalRuntimeDiffPercentage, "Total elapsed running time (minutes)"),
+      ("Duration", totalRuntime1, totalRuntime2, totalRuntimeDiffPercentage, "Total elapsed running time (minutes)"),
       ("Executor Utilization", executorUtilization1, executorUtilization2, executorUtilizationDiffPercentage, "Executor utilization percentage")
     ).filter { case (_, _, _, diff, _) => math.abs(diff) >= 5.0 }
       .map { case (name, v1, v2, diff, desc) =>
