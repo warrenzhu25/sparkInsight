@@ -1,31 +1,72 @@
 package org.apache.spark.insight.analyzer
 
 import org.apache.spark.insight.fetcher.SparkApplicationData
+import org.apache.spark.status.api.v1.StageData
+
+import java.util.concurrent.TimeUnit
 
 /**
  * An analyzer that compares two Spark applications.
  */
 object AppDiffAnalyzer extends Analyzer {
 
+  case class Metric(
+      name: String,
+      value: StageData => Long,
+      isTime: Boolean = false,
+      isSize: Boolean = false,
+      isRecords: Boolean = false)
+
+  private val metrics = Seq(
+    Metric("Disk Spill Size", s => s.diskBytesSpilled, isSize = true),
+    Metric("Executor CPU Time", s => s.executorCpuTime, isTime = true),
+    Metric("Executor Runtime", s => s.executorRunTime, isTime = true),
+    Metric("Input Records", s => s.inputRecords, isRecords = true),
+    Metric("Input Size", s => s.inputBytes, isSize = true),
+    Metric("JVM GC Time", s => s.jvmGcTime, isTime = true),
+    Metric("Memory Spill Size", s => s.memoryBytesSpilled, isSize = true),
+    Metric("Output Records", s => s.outputRecords, isRecords = true),
+    Metric("Output Size", s => s.outputBytes, isSize = true),
+    Metric("Shuffle Read Records", s => s.shuffleReadRecords, isRecords = true),
+    Metric("Shuffle Read Size", s => s.shuffleReadBytes, isSize = true),
+    Metric("Shuffle Read Wait Time", s => s.shuffleFetchWaitTime, isTime = true),
+    Metric("Shuffle Write Records", s => s.shuffleWriteRecords, isRecords = true),
+    Metric("Shuffle Write Size", s => s.shuffleWriteBytes, isSize = true),
+    Metric("Shuffle Write Time", s => s.shuffleWriteTime, isTime = true)
+  )
+
   override def analysis(data1: SparkApplicationData, data2: SparkApplicationData): AnalysisResult = {
-    val metrics1 = getMetrics(data1)
-    val metrics2 = getMetrics(data2)
-
-    val commonKeys = metrics1.keySet.intersect(metrics2.keySet)
-
-    val rows = commonKeys.map { key =>
-      val value1 = metrics1(key)
-      val value2 = metrics2(key)
+    val rows = metrics.map { metric =>
+      val value1 = data1.stageData.map(metric.value).sum(Numeric.LongIsIntegral)
+      val value2 = data2.stageData.map(metric.value).sum(Numeric.LongIsIntegral)
       val diff = value2 - value1
-      val diffPercentage = if (value1 == 0) "N/A" else s"${(diff * 100.0 / value1)}%"
-      Seq(key, value1.toString, value2.toString, s"$diff ($diffPercentage)")
-    }.toSeq
+      val diffPercentage = if (value1 == 0) "N/A" else f"${(diff * 100.0 / value1)}%.2f%%"
 
-    AnalysisResult("App Diff", Seq("Metric", "App1", "App2", "Diff"), rows)
+      Seq(
+        metric.name,
+        formatValue(value1, metric.isTime, metric.isSize, metric.isRecords),
+        formatValue(value2, metric.isTime, metric.isSize, metric.isRecords),
+        s"${formatValue(diff, metric.isTime, metric.isSize, metric.isRecords)} ($diffPercentage)"
+      )
+    }
+
+    val headers = Seq("Metric", "App1", "App2", "Diff")
+    AnalysisResult(
+      s"Spark Application Diff Report for ${data1.appInfo.id} and ${data2.appInfo.id}",
+      headers,
+      rows)
   }
 
-  private def getMetrics(sparkAppData: SparkApplicationData): Map[String, Long] = {
-    AppMetrics.getMetrics(sparkAppData)
+  private def formatValue(value: Long, isTime: Boolean, isSize: Boolean, isRecords: Boolean): String = {
+    if (isTime) {
+      s"${TimeUnit.MILLISECONDS.toMinutes(value)}"
+    } else if (isSize) {
+      s"${value / (1024 * 1024 * 1024)}"
+    } else if (isRecords) {
+      s"${value / 1000}"
+    } else {
+      value.toString
+    }
   }
 
   override def analysis(data: SparkApplicationData): AnalysisResult = {
