@@ -1,7 +1,7 @@
 
 package com.microsoft.spark.insight.cli
 
-import org.apache.spark.insight.analyzer.{AppDiffAnalyzer, AppSummaryAnalyzer, AutoScalingAnalyzer, StageLevelDiffAnalyzer}
+import org.apache.spark.insight.analyzer.{AppDiffAnalyzer, AppSummaryAnalyzer, AutoScalingAnalyzer, ExecutorAnalyzer, StageLevelDiffAnalyzer}
 import org.apache.spark.insight.fetcher.SparkFetcher
 import picocli.CommandLine
 import picocli.CommandLine.{Command, Option}
@@ -22,7 +22,8 @@ class RunCommand extends Callable[Int] {
 
   private val analyzers = Seq(
     AutoScalingAnalyzer,
-    AppSummaryAnalyzer
+    AppSummaryAnalyzer,
+    ExecutorAnalyzer
   )
 
   @Option(names = Array("-u1", "--url1"), paramLabel = "URL1",
