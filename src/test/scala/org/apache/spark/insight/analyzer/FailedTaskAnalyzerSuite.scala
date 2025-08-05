@@ -31,9 +31,9 @@ class FailedTaskAnalyzerSuite extends AnyFunSuite {
     )
 
     val tasks = Map(
-      0L -> new TaskData(0, 0, 0, 0, new Date(0), Some(new Date(0)), Some(1L), "executor-1", "host-1", "FAILED", "PROCESS_LOCAL", false, Seq(), Some("Error 1"), None, Map(), 0, 0),
-      1L -> new TaskData(1, 1, 1, 1, new Date(0), Some(new Date(0)), Some(1L), "executor-2", "host-2", "FAILED", "PROCESS_LOCAL", false, Seq(), Some("Error 1"), None, Map(), 0, 0),
-      2L -> new TaskData(2, 2, 2, 2, new Date(0), Some(new Date(0)), Some(1L), "executor-3", "host-3", "FAILED", "PROCESS_LOCAL", false, Seq(), Some("Error 2"), None, Map(), 0, 0)
+      0L -> new TaskData(0, 0, 0, 0, new Date(0), Some(new Date(0)), Some(1L), "executor-1", "host-1", "FAILED", "PROCESS_LOCAL", false, Seq(), Some("Error 1\nstacktrace"), None, Map(), 0, 0),
+      1L -> new TaskData(1, 1, 1, 1, new Date(0), Some(new Date(0)), Some(1L), "executor-2", "host-2", "FAILED", "PROCESS_LOCAL", false, Seq(), Some("Error 1\nstacktrace"), None, Map(), 0, 0),
+      2L -> new TaskData(2, 2, 2, 2, new Date(0), Some(new Date(0)), Some(1L), "executor-3", "host-3", "FAILED", "PROCESS_LOCAL", false, Seq(), Some("Error 2\nstacktrace"), None, Map(), 0, 0)
     )
 
     val stageData = Seq(

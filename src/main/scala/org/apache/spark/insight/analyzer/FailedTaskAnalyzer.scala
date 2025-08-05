@@ -9,7 +9,7 @@ object FailedTaskAnalyzer extends Analyzer {
     val failedTasks = data.taskData.values.flatten.filter(_.status == TaskStatus.FAILED.toString)
 
     val groupedFailures = failedTasks
-      .groupBy(_.errorMessage.getOrElse("Unknown Error"))
+      .groupBy(_.errorMessage.getOrElse("Unknown Error").split("\n")(0))
       .mapValues(_.size)
       .toSeq
       .sortBy(-_._2)
