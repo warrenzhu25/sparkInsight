@@ -91,7 +91,7 @@ class SparkRestClient {
           Await.result(futureTasks, DEFAULT_TIMEOUT)
         )
 
-        writeDataLocally(appData)
+//        writeDataLocally(appData)
         appData
       }
     }
@@ -124,10 +124,8 @@ class SparkRestClient {
     val userHome = System.getProperty("user.home")
     val file = s"""$userHome/SparkInsight/${sparkApplicationData.appId}.json"""
     val path = Paths.get(file)
-    if (!Files.exists(path)) {
-      logger.info(s"Writing data to $file")
+    if (sparkApplicationData.stageData.exists(_.executorMetricsDistributions.isDefined)) {
       Files.createDirectories(path.getParent)
-      Files.createFile(path)
       Files.write(path, SCALA_OBJECT_MAPPER.writeValueAsBytes(sparkApplicationData))
     }
   }
@@ -178,7 +176,7 @@ class SparkRestClient {
   }
 
   private def getStageData(attemptTarget: WebTarget): Seq[StageData] = {
-    val target = attemptTarget.path("stages")
+    val target = attemptTarget.path("stages").queryParam("withSummaries", "true")
     get(target, fromJson[Seq[StageData]])
   }
 
@@ -227,7 +225,7 @@ object SparkRestClient {
 
   def get[T](webTarget: WebTarget, converter: String => T): T =
     try {
-      logger.debug(s"Fetching URL: ${webTarget.getUri}")
+      println(s"Fetching URL: ${webTarget.getUri}")
       converter(webTarget.request(MediaType.APPLICATION_JSON).get(classOf[String]))
     } catch {
       case NonFatal(e) =>

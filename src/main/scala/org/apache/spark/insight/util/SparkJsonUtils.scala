@@ -1,6 +1,7 @@
 
 package org.apache.spark.insight.util
 
+import com.fasterxml.jackson.annotation.JsonInclude
 import com.fasterxml.jackson.databind.{DeserializationFeature, ObjectMapper}
 import com.fasterxml.jackson.module.scala.DefaultScalaModule
 import com.fasterxml.jackson.module.scala.experimental.ScalaObjectMapper
@@ -31,6 +32,7 @@ object SparkJsonUtils {
     objectMapper.setDateFormat(DATE_FORMAT)
     objectMapper.registerModule(DefaultScalaModule)
     objectMapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false)
+    objectMapper.setSerializationInclusion(JsonInclude.Include.NON_NULL)
     objectMapper
   }
 
