@@ -53,7 +53,7 @@ object AppSummaryAnalyzer extends Analyzer {
       Seq("Output Size", getMetricValue(_.outputBytes, isSize = true), "Total output data produced by tasks (GB)"),
       Seq("Input Records", getMetricValue(_.inputRecords, isRecords = true), "Total records consumed by tasks (thousands)"),
       Seq("Output Records", getMetricValue(_.outputRecords, isRecords = true), "Total records produced by tasks (thousands)"),
-      Seq("Net I/O Time", s"${netIOTime / (1024 * 1024 * 1024)}", "Total time accessing external storage (minutes)")
+      Seq("Net I/O", s"${netIOTime / (1024 * 1024 * 1024)}", "Total data accessed from external storage (GB)")
     )
 
     val shuffleMetrics = Seq(
@@ -62,7 +62,7 @@ object AppSummaryAnalyzer extends Analyzer {
       Seq("Shuffle Read Records", getMetricValue(_.shuffleReadRecords, isRecords = true), "Total shuffle records consumed by tasks (thousands)"),
       Seq("Shuffle Write Records", getMetricValue(_.shuffleWriteRecords, isRecords = true), "Total shuffle records produced by tasks (thousands)"),
       Seq("Shuffle Read Wait Time", getMetricValue(_.shuffleFetchWaitTime, isTime = true), "Total task time blocked waiting for remote shuffle data (minutes)"),
-      Seq("Shuffle Write Time", getMetricValue(_.shuffleWriteTime, isTime = true), "Total shuffle write time spent by tasks (minutes)"),
+      Seq("Shuffle Write Time", getMetricValue(_.shuffleWriteTime, isNanoTime = true), "Total shuffle write time spent by tasks (minutes)"),
       Seq("Disk Spill Size", getMetricValue(_.diskBytesSpilled, isSize = true), "Total data spilled to disk (GB)"),
       Seq("Memory Spill Size", getMetricValue(_.memoryBytesSpilled, isSize = true), "Total data spilled to memory (GB)")
     )
