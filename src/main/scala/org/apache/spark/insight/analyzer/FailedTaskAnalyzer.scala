@@ -9,7 +9,7 @@ object FailedTaskAnalyzer extends Analyzer {
     val failedTasks = data.taskData.values.flatten.filter(_.status == TaskStatus.FAILED.toString)
 
     val groupedFailures = failedTasks
-      .groupBy(_.errorMessage.getOrElse("Unknown Error").split("\n")(0))
+      .groupBy(task => extractFailureReason(task.errorMessage.getOrElse("Unknown Error")))
       .mapValues(_.size)
       .toSeq
       .sortBy(-_._2)
@@ -25,5 +25,15 @@ object FailedTaskAnalyzer extends Analyzer {
       rows,
       "Groups failed tasks by exception and error message."
     )
+  }
+
+  private def extractFailureReason(errorMessage: String): String = {
+    val lines = errorMessage.split('\n')
+    val reasonLines = lines.takeWhile(line => !line.trim.startsWith("at "))
+    if (reasonLines.nonEmpty) {
+      reasonLines.mkString("\n")
+    } else {
+      lines.headOption.getOrElse("Unknown Error")
+    }
   }
 }

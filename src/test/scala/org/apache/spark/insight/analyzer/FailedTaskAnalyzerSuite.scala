@@ -31,9 +31,9 @@ class FailedTaskAnalyzerSuite extends AnyFunSuite {
     )
 
     val tasks = Map(
-      0L -> new TaskData(0, 0, 0, 0, new Date(0), Some(new Date(0)), Some(1L), "executor-1", "host-1", "FAILED", "PROCESS_LOCAL", false, Seq(), Some("Error 1\nstacktrace"), None, Map(), 0, 0),
-      1L -> new TaskData(1, 1, 1, 1, new Date(0), Some(new Date(0)), Some(1L), "executor-2", "host-2", "FAILED", "PROCESS_LOCAL", false, Seq(), Some("Error 1\nstacktrace"), None, Map(), 0, 0),
-      2L -> new TaskData(2, 2, 2, 2, new Date(0), Some(new Date(0)), Some(1L), "executor-3", "host-3", "FAILED", "PROCESS_LOCAL", false, Seq(), Some("Error 2\nstacktrace"), None, Map(), 0, 0)
+      0L -> new TaskData(0, 0, 0, 0, new Date(0), Some(new Date(0)), Some(1L), "executor-1", "host-1", "FAILED", "PROCESS_LOCAL", false, Seq(), Some("org.apache.spark.SparkException: Job aborted.\n\tat org.apache.spark.sql.execution.datasources.FileFormatWriter$.write(FileFormatWriter.scala:244)"), None, Map(), 0, 0),
+      1L -> new TaskData(1, 1, 1, 1, new Date(0), Some(new Date(0)), Some(1L), "executor-2", "host-2", "FAILED", "PROCESS_LOCAL", false, Seq(), Some("org.apache.spark.SparkException: Job aborted.\n\tat org.apache.spark.sql.execution.datasources.FileFormatWriter$.write(FileFormatWriter.scala:244)"), None, Map(), 0, 0),
+      2L -> new TaskData(2, 2, 2, 2, new Date(0), Some(new Date(0)), Some(1L), "executor-3", "host-3", "FAILED", "PROCESS_LOCAL", false, Seq(), Some("java.io.IOException: No space left on device\n\tat java.io.FileOutputStream.writeBytes(Native Method)"), None, Map(), 0, 0)
     )
 
     val stageData = Seq(
@@ -110,9 +110,9 @@ class FailedTaskAnalyzerSuite extends AnyFunSuite {
     val result = FailedTaskAnalyzer.analysis(appData)
 
     assert(result.rows.size === 2)
-    assert(result.rows.head(0) === "Error 1")
+    assert(result.rows.head(0) === "org.apache.spark.SparkException: Job aborted.")
     assert(result.rows.head(1) === "2")
-    assert(result.rows(1)(0) === "Error 2")
+    assert(result.rows(1)(0) === "java.io.IOException: No space left on device")
     assert(result.rows(1)(1) === "1")
   }
 }
