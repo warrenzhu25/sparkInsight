@@ -1,6 +1,6 @@
 package com.microsoft.spark.insight.cli
 
-import org.apache.spark.insight.analyzer.{AppDiffAnalyzer, AppSummaryAnalyzer, AutoScalingAnalyzer, ConfigDiffAnalyzer, ExecutorAnalyzer, FailedTaskAnalyzer, ShuffleSkewAnalyzer, StageLevelDiffAnalyzer}
+import org.apache.spark.insight.analyzer.{AppDiffAnalyzer, AppSummaryAnalyzer, AutoScalingAnalyzer, ConfigDiffAnalyzer, ExecutorAnalyzer, FailedTaskAnalyzer, ShuffleSkewAnalyzer, ShuffleWaitAnalyzer, StageLevelDiffAnalyzer}
 import org.apache.spark.insight.fetcher.{Fetcher, SparkFetcher}
 import picocli.CommandLine
 import picocli.CommandLine.{Command, Option}
@@ -24,7 +24,8 @@ class RunCommand extends Callable[Int] {
     AppSummaryAnalyzer,
     ExecutorAnalyzer,
     ShuffleSkewAnalyzer,
-    FailedTaskAnalyzer
+    FailedTaskAnalyzer,
+    ShuffleWaitAnalyzer
   )
 
   @Option(names = Array("-u1", "--url1"), paramLabel = "URL1",
