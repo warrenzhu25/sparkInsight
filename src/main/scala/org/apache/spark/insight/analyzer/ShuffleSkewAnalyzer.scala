@@ -8,16 +8,16 @@ import java.util.concurrent.TimeUnit
 
 object ShuffleSkewAnalyzer extends Analyzer {
 
-  private val SHUFFLE_READ_THRESHOLD = 10 * 1024 * 1024 * 1024L // 10GB
+  private val SHUFFLE_WRITE_THRESHOLD = 1 * 1024 * 1024 * 1024L // 1GB
 
   override def analysis(data: SparkApplicationData): AnalysisResult = {
-    val skewedStages = data.stageData.filter(_.shuffleReadBytes > SHUFFLE_READ_THRESHOLD).flatMap { stage =>
+    val skewedStages = data.stageData.filter(_.shuffleWriteBytes > SHUFFLE_WRITE_THRESHOLD).flatMap { stage =>
       val stageId = s"${stage.stageId}.${stage.attemptId}"
       val tasks = data.taskData.getOrElse(stageId, Seq.empty)
       if (tasks.nonEmpty) {
-        val executorShuffleReads = tasks.groupBy(_.executorId).mapValues(_.map(_.taskMetrics.get.shuffleReadMetrics.recordsRead).sum)
-        val avgShuffleRead = executorShuffleReads.values.sum.toDouble / executorShuffleReads.size
-        val skewedExecutors = executorShuffleReads.filter(_._2.toDouble > avgShuffleRead * 2)
+        val executorShuffleWrites = tasks.groupBy(_.executorId).mapValues(_.map(_.taskMetrics.get.shuffleWriteMetrics.recordsWritten).sum)
+        val avgShuffleWrite = executorShuffleWrites.values.sum.toDouble / executorShuffleWrites.size
+        val skewedExecutors = executorShuffleWrites.filter(_._2.toDouble > avgShuffleWrite * 2)
         if (skewedExecutors.nonEmpty) {
           Some(stageId -> skewedExecutors)
         } else {
@@ -29,21 +29,21 @@ object ShuffleSkewAnalyzer extends Analyzer {
     }
 
     val rows = skewedStages.flatMap { case (stageId, executors) =>
-      executors.map { case (executorId, shuffleRead) =>
+      executors.map { case (executorId, shuffleWrite) =>
         Seq(
           stageId,
           executorId,
-          FormatUtils.formatValue(shuffleRead, isTime = false, isNanoTime = false, isSize = false, isRecords = true)
+          FormatUtils.formatValue(shuffleWrite, isTime = false, isNanoTime = false, isSize = false, isRecords = true)
         )
       }
     }
 
-    val headers = Seq("Stage ID", "Executor ID", "Shuffle Read Records")
+    val headers = Seq("Stage ID", "Executor ID", "Shuffle Write Records")
     AnalysisResult(
       s"Shuffle Skew Analysis for ${data.appInfo.id}",
       headers,
       rows,
-      "Shows executors with shuffle read significantly larger than the average for stages with shuffle read > 10GB."
+      "Shows executors with shuffle write significantly larger than the average for stages with shuffle write > 1GB."
     )
   }
 

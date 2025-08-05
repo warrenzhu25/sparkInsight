@@ -65,7 +65,7 @@ class ShuffleSkewAnalyzerSuite extends AnyFunSuite {
         shuffleRemoteBytesRead = 0,
         shuffleRemoteBytesReadToDisk = 0,
         shuffleLocalBytesRead = 0,
-        shuffleReadBytes = 11 * 1024 * 1024 * 1024L,
+        shuffleReadBytes = 0,
         shuffleReadRecords = 0,
         shuffleCorruptMergedBlockChunks = 0,
         shuffleMergedFetchFallbackCount = 0,
@@ -77,7 +77,7 @@ class ShuffleSkewAnalyzerSuite extends AnyFunSuite {
         shuffleMergedLocalBytesRead = 0,
         shuffleRemoteReqsDuration = 0,
         shuffleMergedRemoteReqsDuration = 0,
-        shuffleWriteBytes = 0,
+        shuffleWriteBytes = 2 * 1024 * 1024 * 1024L,
         shuffleWriteTime = 0,
         shuffleWriteRecords = 0,
         name = "stage1",
@@ -130,8 +130,8 @@ class ShuffleSkewAnalyzerSuite extends AnyFunSuite {
               peakExecutionMemory = 0,
               inputMetrics = new InputMetrics(0, 0),
               outputMetrics = new OutputMetrics(0, 0),
-              shuffleReadMetrics = new ShuffleReadMetrics(0, 0, 0, 0, 0, 0, 1000, 0, new ShufflePushReadMetrics(0, 0, 0, 0, 0, 0, 0, 0, 0)),
-              shuffleWriteMetrics = new ShuffleWriteMetrics(0, 0, 0)
+              shuffleReadMetrics = new ShuffleReadMetrics(0, 0, 0, 0, 0, 0, 0, 0, new ShufflePushReadMetrics(0, 0, 0, 0, 0, 0, 0, 0, 0)),
+              shuffleWriteMetrics = new ShuffleWriteMetrics(0, 0, 1000)
             )
           ),
           executorLogs = Map(),
@@ -167,8 +167,8 @@ class ShuffleSkewAnalyzerSuite extends AnyFunSuite {
               peakExecutionMemory = 0,
               inputMetrics = new InputMetrics(0, 0),
               outputMetrics = new OutputMetrics(0, 0),
-              shuffleReadMetrics = new ShuffleReadMetrics(0, 0, 0, 0, 0, 0, 1000, 0, new ShufflePushReadMetrics(0, 0, 0, 0, 0, 0, 0, 0, 0)),
-              shuffleWriteMetrics = new ShuffleWriteMetrics(0, 0, 0)
+              shuffleReadMetrics = new ShuffleReadMetrics(0, 0, 0, 0, 0, 0, 0, 0, new ShufflePushReadMetrics(0, 0, 0, 0, 0, 0, 0, 0, 0)),
+              shuffleWriteMetrics = new ShuffleWriteMetrics(0, 0, 1000)
             )
           ),
           executorLogs = Map(),
@@ -204,8 +204,8 @@ class ShuffleSkewAnalyzerSuite extends AnyFunSuite {
               peakExecutionMemory = 0,
               inputMetrics = new InputMetrics(0, 0),
               outputMetrics = new OutputMetrics(0, 0),
-              shuffleReadMetrics = new ShuffleReadMetrics(0, 0, 0, 0, 0, 0, 5000, 0, new ShufflePushReadMetrics(0, 0, 0, 0, 0, 0, 0, 0, 0)),
-              shuffleWriteMetrics = new ShuffleWriteMetrics(0, 0, 0)
+              shuffleReadMetrics = new ShuffleReadMetrics(0, 0, 0, 0, 0, 0, 0, 0, new ShufflePushReadMetrics(0, 0, 0, 0, 0, 0, 0, 0, 0)),
+              shuffleWriteMetrics = new ShuffleWriteMetrics(0, 0, 5000)
             )
           ),
           executorLogs = Map(),
