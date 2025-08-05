@@ -8,7 +8,7 @@ import java.util.concurrent.TimeUnit
 
 object ShuffleSkewAnalyzer extends Analyzer {
 
-  private val SHUFFLE_WRITE_THRESHOLD = 1 * 1024 * 1024 * 1024L // 1GB
+  private val SHUFFLE_WRITE_THRESHOLD = 100 * 1024 * 1024L // 100MB
 
   override def analysis(data: SparkApplicationData): AnalysisResult = {
     val skewedStages = data.stageData.filter(_.shuffleWriteBytes > SHUFFLE_WRITE_THRESHOLD).flatMap { stage =>
