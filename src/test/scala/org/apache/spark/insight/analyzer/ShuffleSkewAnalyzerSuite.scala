@@ -30,6 +30,12 @@ class ShuffleSkewAnalyzerSuite extends AnyFunSuite {
       )
     )
 
+    val executorSummary = Map(
+      "1" -> new ExecutorStageSummary(1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1000, 0, 0, 0, false, None, false),
+      "2" -> new ExecutorStageSummary(1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1000, 0, 0, 0, false, None, false),
+      "3" -> new ExecutorStageSummary(1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 5000, 0, 0, 0, false, None, false)
+    )
+
     val stageData = Seq(
       new StageData(
         status = StageStatus.COMPLETE,
@@ -87,7 +93,7 @@ class ShuffleSkewAnalyzerSuite extends AnyFunSuite {
         rddIds = Seq(),
         accumulatorUpdates = Seq(),
         tasks = None,
-        executorSummary = None,
+        executorSummary = Some(executorSummary),
         speculationSummary = None,
         killedTasksSummary = Map(),
         resourceProfileId = 0,
@@ -99,123 +105,7 @@ class ShuffleSkewAnalyzerSuite extends AnyFunSuite {
       )
     )
 
-    val tasks = Map(
-      "1.0" -> Seq(
-        new TaskData(
-          taskId = 1,
-          index = 0,
-          attempt = 0,
-          partitionId = 0,
-          launchTime = new Date(0),
-          resultFetchStart = None,
-          duration = Some(1),
-          executorId = "1",
-          host = "localhost",
-          status = "SUCCESS",
-          taskLocality = "PROCESS_LOCAL",
-          speculative = false,
-          accumulatorUpdates = Seq(),
-          errorMessage = None,
-          taskMetrics = Some(
-            new TaskMetrics(
-              executorDeserializeTime = 0,
-              executorDeserializeCpuTime = 0,
-              executorRunTime = 1,
-              executorCpuTime = 1,
-              resultSize = 0,
-              jvmGcTime = 0,
-              resultSerializationTime = 0,
-              memoryBytesSpilled = 0,
-              diskBytesSpilled = 0,
-              peakExecutionMemory = 0,
-              inputMetrics = new InputMetrics(0, 0),
-              outputMetrics = new OutputMetrics(0, 0),
-              shuffleReadMetrics = new ShuffleReadMetrics(0, 0, 0, 0, 0, 0, 0, 0, new ShufflePushReadMetrics(0, 0, 0, 0, 0, 0, 0, 0, 0)),
-              shuffleWriteMetrics = new ShuffleWriteMetrics(0, 0, 1000)
-            )
-          ),
-          executorLogs = Map(),
-          schedulerDelay = 0,
-          gettingResultTime = 0
-        ),
-        new TaskData(
-          taskId = 2,
-          index = 1,
-          attempt = 0,
-          partitionId = 1,
-          launchTime = new Date(0),
-          resultFetchStart = None,
-          duration = Some(1),
-          executorId = "2",
-          host = "localhost",
-          status = "SUCCESS",
-          taskLocality = "PROCESS_LOCAL",
-          speculative = false,
-          accumulatorUpdates = Seq(),
-          errorMessage = None,
-          taskMetrics = Some(
-            new TaskMetrics(
-              executorDeserializeTime = 0,
-              executorDeserializeCpuTime = 0,
-              executorRunTime = 1,
-              executorCpuTime = 1,
-              resultSize = 0,
-              jvmGcTime = 0,
-              resultSerializationTime = 0,
-              memoryBytesSpilled = 0,
-              diskBytesSpilled = 0,
-              peakExecutionMemory = 0,
-              inputMetrics = new InputMetrics(0, 0),
-              outputMetrics = new OutputMetrics(0, 0),
-              shuffleReadMetrics = new ShuffleReadMetrics(0, 0, 0, 0, 0, 0, 0, 0, new ShufflePushReadMetrics(0, 0, 0, 0, 0, 0, 0, 0, 0)),
-              shuffleWriteMetrics = new ShuffleWriteMetrics(0, 0, 1000)
-            )
-          ),
-          executorLogs = Map(),
-          schedulerDelay = 0,
-          gettingResultTime = 0
-        ),
-        new TaskData(
-          taskId = 3,
-          index = 2,
-          attempt = 0,
-          partitionId = 2,
-          launchTime = new Date(0),
-          resultFetchStart = None,
-          duration = Some(1),
-          executorId = "3",
-          host = "localhost",
-          status = "SUCCESS",
-          taskLocality = "PROCESS_LOCAL",
-          speculative = false,
-          accumulatorUpdates = Seq(),
-          errorMessage = None,
-          taskMetrics = Some(
-            new TaskMetrics(
-              executorDeserializeTime = 0,
-              executorDeserializeCpuTime = 0,
-              executorRunTime = 1,
-              executorCpuTime = 1,
-              resultSize = 0,
-              jvmGcTime = 0,
-              resultSerializationTime = 0,
-              memoryBytesSpilled = 0,
-              diskBytesSpilled = 0,
-              peakExecutionMemory = 0,
-              inputMetrics = new InputMetrics(0, 0),
-              outputMetrics = new OutputMetrics(0, 0),
-              shuffleReadMetrics = new ShuffleReadMetrics(0, 0, 0, 0, 0, 0, 0, 0, new ShufflePushReadMetrics(0, 0, 0, 0, 0, 0, 0, 0, 0)),
-              shuffleWriteMetrics = new ShuffleWriteMetrics(0, 0, 5000)
-            )
-          ),
-          executorLogs = Map(),
-          schedulerDelay = 0,
-          gettingResultTime = 0
-        )
-      )
-    )
-
-    val appData = SparkApplicationData("app-id-1", Map(), appInfo, Seq(), stageData, Seq(), tasks)
+    val appData = SparkApplicationData("app-id-1", Map(), appInfo, Seq(), stageData, Seq(), Map())
     val result = ShuffleSkewAnalyzer.analysis(appData)
 
     assert(result.rows.size === 1)

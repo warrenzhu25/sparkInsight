@@ -13,11 +13,10 @@ object ShuffleSkewAnalyzer extends Analyzer {
   override def analysis(data: SparkApplicationData): AnalysisResult = {
     val skewedStages = data.stageData.filter(_.shuffleWriteBytes > SHUFFLE_WRITE_THRESHOLD).flatMap { stage =>
       val stageId = s"${stage.stageId}.${stage.attemptId}"
-      val tasks = data.taskData.getOrElse(stageId, Seq.empty)
-      if (tasks.nonEmpty) {
-        val executorShuffleWrites = tasks.groupBy(_.executorId).mapValues(_.map(_.taskMetrics.get.shuffleWriteMetrics.recordsWritten).sum)
-        val avgShuffleWrite = executorShuffleWrites.values.sum.toDouble / executorShuffleWrites.size
-        val skewedExecutors = executorShuffleWrites.filter(_._2.toDouble > avgShuffleWrite * 2)
+      val executorSummary = stage.executorSummary.get
+      if (executorSummary.nonEmpty) {
+        val avgShuffleWrite = executorSummary.values.map(_.shuffleWrite).sum.toDouble / executorSummary.size
+        val skewedExecutors = executorSummary.filter(_._2.shuffleWrite > avgShuffleWrite * 2)
         if (skewedExecutors.nonEmpty) {
           Some(stageId -> skewedExecutors)
         } else {
@@ -29,21 +28,21 @@ object ShuffleSkewAnalyzer extends Analyzer {
     }
 
     val rows = skewedStages.flatMap { case (stageId, executors) =>
-      executors.map { case (executorId, shuffleWrite) =>
+      executors.map { case (executorId, summary) =>
         Seq(
           stageId,
           executorId,
-          FormatUtils.formatValue(shuffleWrite, isTime = false, isNanoTime = false, isSize = false, isRecords = true)
+          FormatUtils.formatValue(summary.shuffleWrite, isTime = false, isNanoTime = false, isSize = true, isRecords = false)
         )
       }
     }
 
-    val headers = Seq("Stage ID", "Executor ID", "Shuffle Write Records")
+    val headers = Seq("Stage ID", "Executor ID", "Shuffle Write Size (GB)")
     AnalysisResult(
       s"Shuffle Skew Analysis for ${data.appInfo.id}",
       headers,
       rows,
-      "Shows executors with shuffle write significantly larger than the average for stages with shuffle write > 1GB."
+      "Shows executors with shuffle write significantly larger than the average for stages with shuffle write > 100MB."
     )
   }
 
