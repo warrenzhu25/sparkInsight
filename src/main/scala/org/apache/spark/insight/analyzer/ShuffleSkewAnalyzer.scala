@@ -20,7 +20,7 @@ object ShuffleSkewAnalyzer extends Analyzer {
         val max = shuffleWrite(4) // 100th percentile
         val ratio = if (median > 0) max / median else 0.0
         if (ratio > 2.0) {
-          Some((stageId, ratio))
+          Some((stageId, ratio, max, median, stage.shuffleWriteBytes))
         } else {
           None
         }
@@ -29,14 +29,17 @@ object ShuffleSkewAnalyzer extends Analyzer {
       }
     }
 
-    val rows = skewedStages.map { case (stageId, ratio) =>
+    val rows = skewedStages.map { case (stageId, ratio, max, median, stageShuffleWrite) =>
       Seq(
         stageId,
-        f"$ratio%.2f"
+        f"$ratio%.2f",
+        FormatUtils.formatBytes(max),
+        FormatUtils.formatBytes(median),
+        FormatUtils.formatBytes(stageShuffleWrite)
       )
     }
 
-    val headers = Seq("Stage ID", "Shuffle Skew Ratio")
+    val headers = Seq("Stage ID", "Shuffle Skew Ratio", "Max Task Shuffle Write", "Median Task Shuffle Write", "Stage Shuffle Write")
     AnalysisResult(
       s"Shuffle Skew Analysis for ${data.appInfo.id}",
       headers,

@@ -17,4 +17,16 @@ object FormatUtils {
       value.toString
     }
   }
+
+  def formatBytes(bytes: Double): String = {
+    if (bytes < 1024) {
+      s"${bytes.toLong} B"
+    } else if (bytes < 1024 * 1024) {
+      f"${bytes / 1024}%.2f KB"
+    } else if (bytes < 1024 * 1024 * 1024) {
+      f"${bytes / (1024 * 1024)}%.2f MB"
+    } else {
+      f"${bytes / (1024 * 1024 * 1024)}%.2f GB"
+    }
+  }
 }

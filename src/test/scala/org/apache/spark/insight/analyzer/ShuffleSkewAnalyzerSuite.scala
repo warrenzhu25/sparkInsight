@@ -133,5 +133,8 @@ class ShuffleSkewAnalyzerSuite extends AnyFunSuite {
     assert(result.rows.size === 1)
     assert(result.rows.head(0) === "1.0")
     assert(result.rows.head(1) === "5.00")
+    assert(result.rows.head(2) === "4.88 KB")
+    assert(result.rows.head(3) === "1000 B")
+    assert(result.rows.head(4) === "2.00 GB")
   }
 }
