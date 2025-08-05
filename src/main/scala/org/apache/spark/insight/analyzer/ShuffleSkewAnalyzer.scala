@@ -13,10 +13,10 @@ object ShuffleSkewAnalyzer extends Analyzer {
   override def analysis(data: SparkApplicationData): AnalysisResult = {
     val skewedStages = data.stageData.filter(_.shuffleWriteBytes > SHUFFLE_WRITE_THRESHOLD).flatMap { stage =>
       val stageId = s"${stage.stageId}.${stage.attemptId}"
-      val executorSummary = stage.executorSummary.get
-      if (executorSummary.nonEmpty) {
-        val avgShuffleWrite = executorSummary.values.map(_.shuffleWrite).sum.toDouble / executorSummary.size
-        val skewedExecutors = executorSummary.filter(_._2.shuffleWrite > avgShuffleWrite * 2)
+      val executorSummary = stage.executorSummary
+      if (executorSummary.isDefined) {
+        val avgShuffleWrite = executorSummary.get.values.map(_.shuffleWrite).sum.toDouble / executorSummary.get.size
+        val skewedExecutors = executorSummary.get.filter(_._2.shuffleWrite > avgShuffleWrite * 2)
         if (skewedExecutors.nonEmpty) {
           Some(stageId -> skewedExecutors)
         } else {
