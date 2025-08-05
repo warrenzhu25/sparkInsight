@@ -105,7 +105,7 @@ class ShuffleSkewAnalyzerSuite extends AnyFunSuite {
         shuffleMergedLocalBytesRead = 0,
         shuffleRemoteReqsDuration = 0,
         shuffleMergedRemoteReqsDuration = 0,
-        shuffleWriteBytes = 2 * 1024 * 1024 * 1024L,
+        shuffleWriteBytes = 11L * 1024 * 1024 * 1024,
         shuffleWriteTime = 0,
         shuffleWriteRecords = 0,
         name = "stage1",
@@ -135,6 +135,6 @@ class ShuffleSkewAnalyzerSuite extends AnyFunSuite {
     assert(result.rows.head(1) === "5.00")
     assert(result.rows.head(2) === "4.88 KB")
     assert(result.rows.head(3) === "1000 B")
-    assert(result.rows.head(4) === "2.00 GB")
+    assert(result.rows.head(4) === "11.00 GB")
   }
 }
