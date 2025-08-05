@@ -13,12 +13,14 @@ object ShuffleSkewAnalyzer extends Analyzer {
   override def analysis(data: SparkApplicationData): AnalysisResult = {
     val skewedStages = data.stageData.filter(_.shuffleWriteBytes > SHUFFLE_WRITE_THRESHOLD).flatMap { stage =>
       val stageId = s"${stage.stageId}.${stage.attemptId}"
-      val executorSummary = stage.executorSummary
-      if (executorSummary.isDefined) {
-        val avgShuffleWrite = executorSummary.get.values.map(_.shuffleWrite).sum.toDouble / executorSummary.get.size
-        val skewedExecutors = executorSummary.get.filter(_._2.shuffleWrite > avgShuffleWrite * 2)
-        if (skewedExecutors.nonEmpty) {
-          Some(stageId -> skewedExecutors)
+      val distributions = stage.executorMetricsDistributions
+      if (distributions.isDefined) {
+        val shuffleWrite = distributions.get.shuffleWrite
+        val median = shuffleWrite(2) // 50th percentile
+        val max = shuffleWrite(4) // 100th percentile
+        val ratio = if (median > 0) max / median else 0.0
+        if (ratio > 2.0) {
+          Some((stageId, ratio))
         } else {
           None
         }
@@ -27,22 +29,19 @@ object ShuffleSkewAnalyzer extends Analyzer {
       }
     }
 
-    val rows = skewedStages.flatMap { case (stageId, executors) =>
-      executors.map { case (executorId, summary) =>
-        Seq(
-          stageId,
-          executorId,
-          FormatUtils.formatValue(summary.shuffleWrite, isTime = false, isNanoTime = false, isSize = true, isRecords = false)
-        )
-      }
+    val rows = skewedStages.map { case (stageId, ratio) =>
+      Seq(
+        stageId,
+        f"$ratio%.2f"
+      )
     }
 
-    val headers = Seq("Stage ID", "Executor ID", "Shuffle Write Size (GB)")
+    val headers = Seq("Stage ID", "Shuffle Skew Ratio")
     AnalysisResult(
       s"Shuffle Skew Analysis for ${data.appInfo.id}",
       headers,
       rows,
-      "Shows executors with shuffle write significantly larger than the average for stages with shuffle write > 100MB."
+      "Shows stages with significant shuffle skew (Max Task Shuffle Write / Median Task Shuffle Write > 2.0) for stages with total shuffle write > 100MB."
     )
   }
 

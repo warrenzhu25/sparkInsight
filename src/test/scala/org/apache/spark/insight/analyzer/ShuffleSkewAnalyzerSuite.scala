@@ -36,6 +36,28 @@ class ShuffleSkewAnalyzerSuite extends AnyFunSuite {
       "3" -> new ExecutorStageSummary(1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 5000, 0, 0, 0, false, None, false)
     )
 
+    val executorMetricsDistributions = Some(new ExecutorMetricsDistributions(
+      quantiles = IndexedSeq(0.0, 0.25, 0.5, 0.75, 1.0),
+      taskTime = IndexedSeq(0.0, 0.0, 0.0, 0.0, 0.0),
+      failedTasks = IndexedSeq(0.0, 0.0, 0.0, 0.0, 0.0),
+      succeededTasks = IndexedSeq(0.0, 0.0, 0.0, 0.0, 0.0),
+      killedTasks = IndexedSeq(0.0, 0.0, 0.0, 0.0, 0.0),
+      inputBytes = IndexedSeq(0.0, 0.0, 0.0, 0.0, 0.0),
+      inputRecords = IndexedSeq(0.0, 0.0, 0.0, 0.0, 0.0),
+      outputBytes = IndexedSeq(0.0, 0.0, 0.0, 0.0, 0.0),
+      outputRecords = IndexedSeq(0.0, 0.0, 0.0, 0.0, 0.0),
+      shuffleRead = IndexedSeq(0.0, 0.0, 0.0, 0.0, 0.0),
+      shuffleReadRecords = IndexedSeq(0.0, 0.0, 0.0, 0.0, 0.0),
+      shuffleWrite = IndexedSeq(100.0, 100.0, 1000.0, 2000.0, 5000.0),
+      shuffleWriteRecords = IndexedSeq(0.0, 0.0, 0.0, 0.0, 0.0),
+      memoryBytesSpilled = IndexedSeq(0.0, 0.0, 0.0, 0.0, 0.0),
+      diskBytesSpilled = IndexedSeq(0.0, 0.0, 0.0, 0.0, 0.0),
+      peakMemoryMetrics = new ExecutorPeakMetricsDistributions(
+        quantiles = IndexedSeq(0.0, 0.0, 0.0, 0.0, 0.0),
+        executorMetrics = IndexedSeq()
+      )
+    ))
+
     val stageData = Seq(
       new StageData(
         status = StageStatus.COMPLETE,
@@ -99,7 +121,7 @@ class ShuffleSkewAnalyzerSuite extends AnyFunSuite {
         resourceProfileId = 0,
         peakExecutorMetrics = None,
         taskMetricsDistributions = None,
-        executorMetricsDistributions = None,
+        executorMetricsDistributions = executorMetricsDistributions,
         isShufflePushEnabled = false,
         shuffleMergersCount = 0
       )
@@ -110,6 +132,6 @@ class ShuffleSkewAnalyzerSuite extends AnyFunSuite {
 
     assert(result.rows.size === 1)
     assert(result.rows.head(0) === "1.0")
-    assert(result.rows.head(1) === "3")
+    assert(result.rows.head(1) === "5.00")
   }
 }
