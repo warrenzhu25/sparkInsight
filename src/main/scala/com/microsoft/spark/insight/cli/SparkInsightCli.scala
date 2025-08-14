@@ -13,7 +13,7 @@ import java.util.concurrent.Callable
 @Command(name = "spark-insight-cli", version = Array("v0.1"),
   mixinStandardHelpOptions = true, // add --help and --version options
   description = Array("SparkInsight - Auto tuning and failure analysis"),
-  subcommands = Array(classOf[RunCommand], classOf[ServerCommand]))
+  subcommands = Array(classOf[RunCommand]))
 class SparkInsightCli {}
 
 @Command(name = "run", description = Array("Run analysis on Spark applications"))
@@ -81,13 +81,7 @@ class RunCommand extends Callable[Int] {
   }
 }
 
-@Command(name = "server", description = Array("Start the web server"))
-class ServerCommand extends Callable[Int] {
-  def call(): Int = {
-    com.microsoft.spark.insight.server.WebServer.main(Array())
-    0
-  }
-}
+
 
 /**
  * Companion object for the Spark Insight application.
