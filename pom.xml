@@ -14,6 +14,11 @@
         <artifactId>scala-maven-plugin</artifactId>
         <groupId>net.alchim31.maven</groupId>
         <version>4.8.1</version>
+        <configuration>
+          <args>
+            <arg>-Xsource:3</arg>
+          </args>
+        </configuration>
         <executions>
           <execution>
             <goals>
@@ -136,12 +141,12 @@
     <dependency>
       <artifactId>scallop_${scala.binary.version}</artifactId>
       <groupId>org.rogach</groupId>
-      <version>3.5.1</version>
+      <version>5.0.0</version>
     </dependency>
     <dependency>
       <groupId>com.lihaoyi</groupId>
       <artifactId>scalatags_${scala.binary.version}</artifactId>
-      <version>0.12.0</version>
+      <version>0.13.1</version>
     </dependency>
     <dependency>
       <artifactId>scala-library</artifactId>
@@ -167,8 +172,8 @@
     </dependency>
     <dependency>
       <groupId>org.mockito</groupId>
-      <artifactId>mockito-scala_2.12</artifactId>
-      <version>1.17.12</version>
+      <artifactId>mockito-scala_${scala.binary.version}</artifactId>
+      <version>1.17.30</version>
       <scope>test</scope>
     </dependency>
     <dependency>
@@ -229,8 +234,8 @@
     <java.version>1.8</java.version>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
-    <scala.binary.version>2.12</scala.binary.version>
-    <scala.version>2.12.18</scala.version>
+    <scala.binary.version>2.13</scala.binary.version>
+    <scala.version>2.13.12</scala.version>
     <spark.version>3.5.6</spark.version>
   </properties>
 
