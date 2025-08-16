@@ -1,0 +1,11 @@
+{
+  "mcpServers": {
+    "spark-insight": {
+      "command": "java",
+      "args": [
+        "-jar", 
+        "/absolute/path/to/spark-insight-mcp-1.0-SNAPSHOT-jar-with-dependencies.jar"
+      ]
+    }
+  }
+}

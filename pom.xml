@@ -39,10 +39,34 @@
         </configuration>
         <executions>
           <execution>
+            <id>cli</id>
             <goals>
               <goal>single</goal>
             </goals>
             <phase>package</phase>
+            <configuration>
+              <finalName>${project.artifactId}-cli-${project.version}</finalName>
+              <archive>
+                <manifest>
+                  <mainClass>com.microsoft.spark.insight.cli.SparkInsightCli</mainClass>
+                </manifest>
+              </archive>
+            </configuration>
+          </execution>
+          <execution>
+            <id>mcp</id>
+            <goals>
+              <goal>single</goal>
+            </goals>
+            <phase>package</phase>
+            <configuration>
+              <finalName>${project.artifactId}-mcp-${project.version}</finalName>
+              <archive>
+                <manifest>
+                  <mainClass>org.apache.spark.insight.mcp.McpServer</mainClass>
+                </manifest>
+              </archive>
+            </configuration>
           </execution>
         </executions>
         <groupId>org.apache.maven.plugins</groupId>
@@ -196,6 +220,21 @@
       <groupId>org.typelevel</groupId>
       <artifactId>cats-effect-std_${scala.binary.version}</artifactId>
       <version>3.3.14</version>
+    </dependency>
+    <dependency>
+      <groupId>io.circe</groupId>
+      <artifactId>circe-core_${scala.binary.version}</artifactId>
+      <version>0.14.6</version>
+    </dependency>
+    <dependency>
+      <groupId>io.circe</groupId>
+      <artifactId>circe-generic_${scala.binary.version}</artifactId>
+      <version>0.14.6</version>
+    </dependency>
+    <dependency>
+      <groupId>io.circe</groupId>
+      <artifactId>circe-parser_${scala.binary.version}</artifactId>
+      <version>0.14.6</version>
     </dependency>
   </dependencies>
   <dependencyManagement>

@@ -2,10 +2,11 @@
 
 Spark auto performance tuning and failure analysis tool.
 
-SparkInsight is a command-line tool for analyzing and tuning Spark applications. It helps identify performance bottlenecks, suggests optimizations, and provides a detailed summary of application metrics.
+SparkInsight is a command-line tool and AI-powered assistant for analyzing and tuning Spark applications. It helps identify performance bottlenecks, suggests optimizations, and provides detailed analysis through both traditional CLI and modern AI interfaces.
 
 ## Features
 
+### Traditional CLI
 *   **Performance Analysis:** Identifies performance bottlenecks in Spark jobs.
 *   **Failure Analysis:** Helps to debug and identify the root cause of job failures.
 *   **Metrics Summary:** Provides a comprehensive summary of key metrics for Spark applications.
@@ -14,7 +15,16 @@ SparkInsight is a command-line tool for analyzing and tuning Spark applications.
 *   **Executor Analysis:** Shows the number of running executors in one-minute intervals.
 *   **Command-Line Interface:** Easy to use from the command line.
 
+### AI-Powered Analysis (MCP Server)
+*   **Natural Language Queries:** Ask questions about Spark performance in plain English.
+*   **AI Assistant Integration:** Works with Claude Desktop, Cursor IDE, and other MCP-compatible tools.
+*   **Interactive Analysis:** Get real-time insights and recommendations through conversation.
+*   **Automated Insights:** AI can proactively identify issues and suggest optimizations.
+*   **Multi-App Comparison:** Compare applications through natural language requests.
+
 ## Usage
+
+### Traditional CLI
 
 To analyze a single Spark application, run the following command:
 
@@ -35,6 +45,45 @@ To compare two specific Spark applications, run the following command:
 ```
 
 Replace `<app_id_or_url>` with your Spark application ID or the full URL to the application in the Spark History Server.
+
+### AI-Powered Analysis
+
+SparkInsight includes a Model Context Protocol (MCP) server that enables AI assistants to analyze Spark applications through natural language. 
+
+#### Quick Setup for Claude Desktop
+
+1. **Build the project:**
+   ```bash
+   mvn clean package
+   ```
+
+2. **Configure Claude Desktop** by editing your configuration file:
+   - **Windows:** `%APPDATA%\Claude\claude_desktop_config.json`
+   - **macOS:** `~/Library/Application Support/Claude/claude_desktop_config.json`
+   - **Linux:** `~/.config/Claude/claude_desktop_config.json`
+
+   Add the SparkInsight MCP server:
+   ```json
+   {
+     "mcpServers": {
+       "spark-insight": {
+         "command": "java",
+         "args": [
+           "-jar", 
+           "/absolute/path/to/target/spark-insight-mcp-1.0-SNAPSHOT-jar-with-dependencies.jar"
+         ]
+       }
+     }
+   }
+   ```
+
+3. **Restart Claude Desktop** and start asking questions:
+   - "Analyze my Spark app at http://localhost:18080/history/app-20240228220418-0000"
+   - "Compare these two apps and tell me which performed better"
+   - "Check for shuffle skew in my application"
+   - "What's causing the performance bottleneck in my job?"
+
+For detailed MCP setup instructions, see [MCP_README.md](MCP_README.md).
 
 ## Example output:
 
@@ -195,6 +244,22 @@ To build the project from source, use Maven:
 ```bash
 mvn clean package
 ```
+
+This creates two JAR files:
+- `target/spark-insight-cli-1.0-SNAPSHOT-jar-with-dependencies.jar` - Traditional CLI
+- `target/spark-insight-mcp-1.0-SNAPSHOT-jar-with-dependencies.jar` - MCP Server for AI integration
+
+## Integration Options
+
+### AI Assistants
+- **Claude Desktop**: Native MCP support for interactive Spark analysis
+- **Cursor IDE**: Add SparkInsight as an MCP server for in-editor analysis
+- **Continue.dev**: Integrate with VS Code extension for development workflow
+
+### CI/CD Pipelines
+- Use the CLI for automated performance regression detection
+- Generate reports in CI to catch performance issues early
+- Compare deployment performance across environments
 
 ## License
 
