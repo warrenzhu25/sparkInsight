@@ -1,7 +1,8 @@
 
 package org.apache.spark.insight
 
-import org.apache.spark.insight.analyzer.{AppSummaryAnalyzer, AutoScalingAnalyzer}
+import org.apache.spark.insight.analyzer._
+
 import org.apache.spark.insight.fetcher.SparkFetcher
 import picocli.CommandLine
 import picocli.CommandLine.{Command, Option}
@@ -18,7 +19,10 @@ class SparkInsight extends Callable[Int] {
 
   private val analyzers = Seq(
     AutoScalingAnalyzer,
-    AppSummaryAnalyzer
+    AppSummaryAnalyzer,
+    ExecutorAnalyzer,
+    ShuffleSkewAnalyzer,
+    FailedTaskAnalyzer
   )
 
   @Option(names = Array("-u", "--url"), paramLabel = "URL",

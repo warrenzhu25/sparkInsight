@@ -1,6 +1,7 @@
 
-package com.microsoft.spark.insight.cli
+package com.apache.spark.insight.cli
 
+import org.apache.spark.insight.RunCommand
 import org.apache.spark.insight.fetcher.{Fetcher, SparkApplicationData}
 import org.apache.spark.status.api.v1.{ApplicationAttemptInfo, ApplicationInfo}
 import org.scalatest.funsuite.AnyFunSuite

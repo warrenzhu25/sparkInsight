@@ -1,6 +1,6 @@
-package com.microsoft.spark.insight.cli
+package org.apache.spark.insight
 
-import org.apache.spark.insight.analyzer.{AppDiffAnalyzer, AppSummaryAnalyzer, AutoScalingAnalyzer, ConfigDiffAnalyzer, ExecutorAnalyzer, ShuffleSkewAnalyzer, StageLevelDiffAnalyzer}
+import org.apache.spark.insight.analyzer._
 import org.apache.spark.insight.fetcher.{Fetcher, SparkFetcher}
 import picocli.CommandLine
 import picocli.CommandLine.{Command, Option}
@@ -23,7 +23,9 @@ class RunCommand extends Callable[Int] {
     AutoScalingAnalyzer,
     AppSummaryAnalyzer,
     ExecutorAnalyzer,
-    ShuffleSkewAnalyzer
+    ShuffleSkewAnalyzer,
+    FailedTaskAnalyzer,
+    ShuffleWaitAnalyzer
   )
 
   @Option(names = Array("-u1", "--url1"), paramLabel = "URL1",
@@ -38,7 +40,7 @@ class RunCommand extends Callable[Int] {
     description = Array("Spark application name"))
   private var appName: String = _
 
-  private[cli] var fetcher: Fetcher = SparkFetcher
+  var fetcher: Fetcher = SparkFetcher
 
   private def getFullUrl(urlOrAppId: String): String = {
     if (urlOrAppId.startsWith("http")) {
