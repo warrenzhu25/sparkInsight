@@ -241,6 +241,16 @@
       <artifactId>circe-parser_${scala.binary.version}</artifactId>
       <version>0.14.6</version>
     </dependency>
+    <dependency>
+      <groupId>org.http4s</groupId>
+      <artifactId>http4s-circe_${scala.binary.version}</artifactId>
+      <version>0.23.16</version>
+    </dependency>
+    <dependency>
+      <groupId>co.fs2</groupId>
+      <artifactId>fs2-core_${scala.binary.version}</artifactId>
+      <version>3.3.0</version>
+    </dependency>
   </dependencies>
   <dependencyManagement>
     <dependencies>

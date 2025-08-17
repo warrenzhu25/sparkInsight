@@ -2,6 +2,7 @@ package org.apache.spark.insight.mcp
 
 import io.circe.{Decoder, Encoder, Json}
 import io.circe.generic.semiauto._
+import io.circe.syntax._
 
 /**
  * Model Context Protocol (MCP) JSON-RPC 2.0 message types and structures
@@ -15,6 +16,14 @@ object McpProtocol {
     id: Option[Either[String, Int]] = None,
     method: Option[String] = None,
     params: Option[Json] = None,
+    result: Option[Json] = None,
+    error: Option[JsonRpcError] = None
+  )
+
+  // Response-only message without method/params fields
+  case class JsonRpcResponse(
+    jsonrpc: String = "2.0",
+    id: Option[Either[String, Int]] = None,
     result: Option[Json] = None,
     error: Option[JsonRpcError] = None
   )
@@ -110,6 +119,20 @@ object McpProtocol {
   }
 
   implicit val jsonRpcMessageEncoder: Encoder[JsonRpcMessage] = deriveEncoder
+  implicit val jsonRpcResponseEncoder: Encoder[JsonRpcResponse] = Encoder.instance { response =>
+    val baseFields = List(
+      "jsonrpc" -> Json.fromString(response.jsonrpc),
+      "id" -> response.id.map {
+        case Left(str) => Json.fromString(str)
+        case Right(num) => Json.fromInt(num)
+      }.getOrElse(Json.Null)
+    )
+    
+    val resultField = response.result.toList.map("result" -> _)
+    val errorField = response.error.toList.map("error" -> _.asJson)
+    
+    Json.obj((baseFields ++ resultField ++ errorField): _*)
+  }
   implicit val jsonRpcMessageDecoder: Decoder[JsonRpcMessage] = deriveDecoder
 
   implicit val samplingCapabilityEncoder: Encoder[SamplingCapability] = deriveEncoder

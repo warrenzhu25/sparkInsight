@@ -9,7 +9,8 @@
       "WebFetch(domain:modelcontextprotocol.io)",
       "WebFetch(domain:spec.modelcontextprotocol.io)",
       "Bash(mvn clean:*)",
-      "Bash(mvn:*)"
+      "Bash(mvn:*)",
+      "Bash(git commit:*)"
     ],
     "deny": [],
     "ask": [],
