@@ -1,0 +1,9 @@
+{
+  "mcpServers": {
+    "spark-insight-http": {
+      "command": null,
+      "transport": "http",
+      "serverUrl": "http://localhost:8080/mcp"
+    }
+  }
+}

@@ -23,6 +23,30 @@ This creates two JAR files:
 - `target/spark-insight-cli-1.0-SNAPSHOT-jar-with-dependencies.jar` - Traditional CLI
 - `target/spark-insight-mcp-1.0-SNAPSHOT-jar-with-dependencies.jar` - MCP Server
 
+### 1.1. Run the MCP Server
+
+The MCP server supports three transport modes:
+
+**Standard I/O (stdio) - Default Mode:**
+```bash
+java -jar target/spark-insight-mcp-1.0-SNAPSHOT-jar-with-dependencies.jar
+```
+
+**HTTP Mode:**
+```bash
+java -jar target/spark-insight-mcp-1.0-SNAPSHOT-jar-with-dependencies.jar --transport http --http-port 8080
+```
+
+**Server-Sent Events (SSE) Mode:**
+```bash
+java -jar target/spark-insight-mcp-1.0-SNAPSHOT-jar-with-dependencies.jar --transport sse --sse-port 8081
+```
+
+**Command Line Options:**
+```bash
+java -jar target/spark-insight-mcp-1.0-SNAPSHOT-jar-with-dependencies.jar --help
+```
+
 ### 2. Configure Claude Desktop
 
 Edit your Claude Desktop configuration file:
@@ -30,6 +54,8 @@ Edit your Claude Desktop configuration file:
 **Windows:** `%APPDATA%\Claude\claude_desktop_config.json`
 **macOS:** `~/Library/Application Support/Claude/claude_desktop_config.json`  
 **Linux:** `~/.config/Claude/claude_desktop_config.json`
+
+#### 2.1. Standard I/O Mode (Default)
 
 Add the SparkInsight MCP server:
 
@@ -45,6 +71,37 @@ Add the SparkInsight MCP server:
     }
   }
 }
+```
+
+#### 2.2. HTTP Mode Configuration
+
+For HTTP mode, you can use tools like curl or web clients:
+
+```bash
+# Start the HTTP server
+java -jar target/spark-insight-mcp-1.0-SNAPSHOT-jar-with-dependencies.jar --transport http --http-port 8080
+
+# Test with curl
+curl -X POST http://localhost:8080/mcp \
+  -H "Content-Type: application/json" \
+  -d '{"jsonrpc":"2.0","id":1,"method":"tools/list"}'
+```
+
+#### 2.3. Server-Sent Events (SSE) Mode
+
+SSE mode provides real-time bidirectional communication:
+
+```bash
+# Start the SSE server
+java -jar target/spark-insight-mcp-1.0-SNAPSHOT-jar-with-dependencies.jar --transport sse --sse-port 8081
+
+# Connect to SSE endpoint (in browser or with curl)
+curl -N http://localhost:8081/mcp/events
+
+# Send messages (in another terminal)
+curl -X POST http://localhost:8081/mcp/message/{connectionId} \
+  -H "Content-Type: application/json" \
+  -d '{"jsonrpc":"2.0","id":1,"method":"tools/list"}'
 ```
 
 Replace `/absolute/path/to/` with the actual path to your JAR file.
@@ -204,6 +261,35 @@ Once configured with Claude Desktop, you can ask natural language questions:
 "List all jobs in this application and tell me which ones failed"
 ```
 
+## Transport Modes
+
+### Standard I/O (stdio)
+- **Use case**: MCP clients like Claude Desktop, Cursor IDE
+- **Protocol**: JSON-RPC over stdin/stdout
+- **Configuration**: Add to MCP client configuration
+- **Port**: None (uses process pipes)
+
+### HTTP Mode
+- **Use case**: Web applications, REST API clients, testing
+- **Protocol**: JSON-RPC over HTTP
+- **Default Port**: 8080
+- **Endpoints**:
+  - `POST /mcp` - Single JSON-RPC requests
+  - `POST /mcp/batch` - Batch JSON-RPC requests
+  - `GET /health` - Health check
+- **CORS**: Enabled for web browsers
+
+### Server-Sent Events (SSE) Mode
+- **Use case**: Real-time web applications, dashboards
+- **Protocol**: SSE + HTTP POST for bidirectional communication
+- **Default Port**: 8081
+- **Endpoints**:
+  - `GET /mcp/events` - Establish SSE connection
+  - `POST /mcp/message/{connectionId}` - Send messages
+  - `GET /mcp/connections` - List active connections
+  - `GET /health` - Health check
+- **Features**: Connection management, real-time streaming
+
 ## URL Formats
 
 SparkInsight MCP server supports URLs from:
@@ -214,23 +300,56 @@ SparkInsight MCP server supports URLs from:
 
 ## Troubleshooting
 
-### "Server not found" error
+### Standard I/O Mode
+
+**"Server not found" error:**
 - Verify the JAR path in `claude_desktop_config.json` is absolute and correct
 - Ensure you restarted Claude Desktop after configuration changes
 - Check that Java is available in your PATH
 
-### "Connection failed" error  
+**Permission errors:**
+- Ensure the JAR file has execute permissions
+- Verify Java can access the JAR file location
+
+### HTTP Mode
+
+**"Connection refused" error:**
+- Verify the server is running: check console output
+- Ensure the port is not in use by another application
+- Check firewall settings
+
+**CORS errors in browser:**
+- CORS is enabled by default, but ensure the request includes proper headers
+- Use `Content-Type: application/json` for POST requests
+
+### SSE Mode
+
+**SSE connection fails:**
+- Verify the server is running on the specified port
+- Check browser developer tools for connection errors
+- Ensure the connection ID is valid when sending messages
+
+**Message delivery issues:**
+- Verify the connection ID exists: `GET /mcp/connections`
+- Check that the SSE connection is still active
+- Monitor server logs for error messages
+
+### General Issues
+
+**"Connection failed" error:**
 - Verify the Spark application URL is accessible
 - Ensure the Spark History Server is running
 - Check that the application ID exists
 
-### Permission errors
-- Ensure the JAR file has execute permissions
-- Verify Java can access the JAR file location
+**Java version mismatch:**
+- Ensure you're using Java 8 or higher
+- Check: `java -version`
 
 ## Integration with Other Tools
 
-### Cursor IDE
+### MCP Clients (stdio mode)
+
+**Cursor IDE:**
 To add SparkInsight to Cursor IDE, go to Settings > Tools & Integrations > New MCP Server and add:
 
 ```json
@@ -242,7 +361,7 @@ To add SparkInsight to Cursor IDE, go to Settings > Tools & Integrations > New M
 }
 ```
 
-### Continue.dev
+**Continue.dev:**
 Add to your `continue_config.json`:
 
 ```json
@@ -256,19 +375,72 @@ Add to your `continue_config.json`:
 }
 ```
 
+### Web Applications (HTTP mode)
+
+**JavaScript/TypeScript:**
+```javascript
+const response = await fetch('http://localhost:8080/mcp', {
+  method: 'POST',
+  headers: { 'Content-Type': 'application/json' },
+  body: JSON.stringify({
+    jsonrpc: '2.0',
+    id: 1,
+    method: 'tools/list'
+  })
+});
+const result = await response.json();
+```
+
+**Python:**
+```python
+import requests
+
+response = requests.post('http://localhost:8080/mcp', json={
+    'jsonrpc': '2.0',
+    'id': 1,
+    'method': 'tools/list'
+})
+result = response.json()
+```
+
+### Real-time Applications (SSE mode)
+
+**JavaScript EventSource:**
+```javascript
+const eventSource = new EventSource('http://localhost:8081/mcp/events');
+eventSource.onmessage = function(event) {
+  const data = JSON.parse(event.data);
+  console.log('Received:', data);
+};
+
+// Send message
+fetch(`http://localhost:8081/mcp/message/${connectionId}`, {
+  method: 'POST',
+  headers: { 'Content-Type': 'application/json' },
+  body: JSON.stringify({
+    jsonrpc: '2.0',
+    id: 1,
+    method: 'analyze_spark_app',
+    params: { url: 'http://localhost:18080/history/app-20240228220418-0000' }
+  })
+});
+```
+
 ## Protocol Details
 
 SparkInsight implements the Model Context Protocol specification version 2025-06-18:
 
-- **Transport**: Standard Input/Output (stdio)
+- **Transport**: Standard Input/Output (stdio), HTTP, Server-Sent Events (SSE)
 - **Protocol**: JSON-RPC 2.0
 - **Capabilities**: Tools only (no prompts or resources)
 
 The server follows MCP best practices:
-- Never writes to stdout except for JSON-RPC responses
+- Never writes to stdout except for JSON-RPC responses (stdio mode)
 - Provides detailed tool schemas with parameter validation
 - Returns structured error messages for debugging
 - Supports graceful shutdown
+- CORS enabled for web client compatibility (HTTP/SSE modes)
+- Connection management and real-time streaming (SSE mode)
 
 ## Development
 
@@ -277,7 +449,27 @@ To extend the MCP server with additional tools:
 1. Add new methods to `SparkAnalysisTools.scala`
 2. Register tools in the `getAvailableTools()` method  
 3. Implement tool logic in the `callTool()` method
-4. Rebuild and test with Claude Desktop
+4. Rebuild: `mvn clean package`
+5. Test with your preferred transport mode:
+   - **stdio**: Test with Claude Desktop or other MCP clients
+   - **HTTP**: Test with curl or web applications  
+   - **SSE**: Test with web browsers or real-time applications
+
+## Alternative Libraries
+
+For new projects, consider these Scala MCP libraries:
+
+- **fastmcp-scala**: Annotation-driven Scala 3 library with ZIO support
+  ```scala
+  //> using dep com.tjclp::fast-mcp-scala:0.1.1
+  
+  @Tool(name = Some("analyze"))
+  def analyzeApp(@ToolParam("url") url: String): String = { ... }
+  ```
+
+- **indoorvivants/mcp**: Alternative Scala MCP implementation
+
+SparkInsight's current implementation provides full MCP compatibility across all transport modes while maintaining Scala 2.13 compatibility.
 
 ## Contributing
 
@@ -287,3 +479,5 @@ Contributions to the MCP server are welcome! Please ensure:
 - Error handling is comprehensive with helpful messages
 - Tools provide meaningful analysis results
 - Documentation is updated for new capabilities
+- Test across all transport modes (stdio, HTTP, SSE)
+- Follow existing code patterns and conventions
