@@ -57,6 +57,8 @@ Restart Claude Desktop for the configuration to take effect.
 
 The MCP server provides these analysis tools:
 
+## High-Level Analysis Tools
+
 ### `analyze_spark_app`
 Analyze a single Spark application for performance insights and recommendations.
 
@@ -101,6 +103,64 @@ Analyze executor resource utilization and identify optimization opportunities.
 **Parameters:**
 - `url` (required): Spark application tracking URL
 
+## Low-Level Data Access Tools
+
+### `list_applications`
+List all applications available in the Spark History Server.
+
+**Parameters:**
+- `history_server_url` (optional): Spark History Server URL (default: http://localhost:18080)
+
+**Example:**
+```
+List all applications available in the history server
+```
+
+### `get_executors`
+Get detailed executor information for a Spark application.
+
+**Parameters:**
+- `url` (required): Spark application tracking URL
+- `active_only` (optional): Return only active executors (default: false)
+
+**Example:**
+```
+Get executor details for my Spark app including memory and CPU usage
+```
+
+### `get_application_info`
+Get detailed application metadata and configuration.
+
+**Parameters:**
+- `url` (required): Spark application tracking URL
+
+**Example:**
+```
+Show me the configuration and metadata for this Spark application
+```
+
+### `get_jobs_info`
+Get detailed job information for a Spark application.
+
+**Parameters:**
+- `url` (required): Spark application tracking URL
+
+**Example:**
+```
+Show me all jobs in this application with their status and task counts
+```
+
+### `get_stages_info`
+Get detailed stage information and metrics for a Spark application.
+
+**Parameters:**
+- `url` (required): Spark application tracking URL
+
+**Example:**
+```
+Get detailed stage-level metrics including input/output and shuffle data
+```
+
 ## Usage Examples
 
 Once configured with Claude Desktop, you can ask natural language questions:
@@ -120,6 +180,28 @@ Once configured with Claude Desktop, you can ask natural language questions:
 ### Specific Analysis
 ```
 "Check for shuffle skew in this Spark application: http://localhost:18080/history/app-20240228220418-0000"
+```
+
+### Data Exploration
+```
+"List all applications in the history server and show me the most recent ones"
+```
+
+```
+"Show me detailed executor information for my application, including which ones are still active"
+```
+
+```
+"Get the complete configuration and job breakdown for this Spark application"
+```
+
+### Granular Investigation
+```
+"Show me stage-by-stage metrics for this application to identify bottlenecks"
+```
+
+```
+"List all jobs in this application and tell me which ones failed"
 ```
 
 ## URL Formats

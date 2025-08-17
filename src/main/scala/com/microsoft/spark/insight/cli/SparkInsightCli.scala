@@ -82,7 +82,8 @@ class RunCommand extends Callable[Int] {
 @Command(name = "server", description = Array("Start the web server"))
 class ServerCommand extends Callable[Int] {
   def call(): Int = {
-    com.microsoft.spark.insight.server.WebServer.main(Array())
+    // TODO: Implement web server functionality
+    println("Web server functionality not yet implemented")
     0
   }
 }
